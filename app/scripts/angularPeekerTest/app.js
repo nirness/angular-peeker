@@ -6,7 +6,9 @@
  * @description
  * # angularPeekerTest
  *
- * Main module of the application.
+ * Main module of the test application.
  */
 angular
-  .module('angularPeekerTest', []);
+    .module('angularPeekerTest', [
+        'angularPeeker'
+    ]);
