@@ -2,12 +2,12 @@
 
 /**
  * @ngdoc function
- * @name angularPeekerApp.controller:MainCtrl
+ * @name angularPeekerTest.controller:MainCtrl
  * @description
  * # MainCtrl
- * Controller of the angularPeekerApp
+ * Controller of the angularPeekerTest
  */
-angular.module('angularPeekerApp')
+angular.module('angularPeekerTest')
   .controller('MainCtrl', function ($scope) {
     $scope.awesomeThings = [
       'HTML5 Boilerplate',

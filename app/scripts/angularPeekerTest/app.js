@@ -2,11 +2,11 @@
 
 /**
  * @ngdoc overview
- * @name angularPeekerApp
+ * @name angularPeekerTest
  * @description
- * # angularPeekerApp
+ * # angularPeekerTest
  *
  * Main module of the application.
  */
 angular
-  .module('angularPeekerApp', []);
+  .module('angularPeekerTest', []);
