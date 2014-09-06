@@ -1,0 +1,8 @@
+.peekerActivated {
+    cursor: crosshair;
+    user-select: none;
+}
+
+.elementHovered {
+    background-color: #ff9e99;
+}
