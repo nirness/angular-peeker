@@ -6,11 +6,19 @@
  * Value in the angularPeeker.
  */
 angular.module('angularPeeker')
-  .value('config', {
-        peekerHotKey: {
-            key: 'p',
-            altKey: true,
-            shiftKey: false,
-            ctrlKey: true
+    .provider('config', [
+        function () {
+            this.peekerHotKey = {
+                key: 'p',
+                altKey: true,
+                shiftKey: false,
+                ctrlKey: true
+            };
+
+            this.$get = function () {
+                return {
+                    peekerHotKey: this.peekerHotKey
+                };
+            };
         }
-    });
+    ]);
