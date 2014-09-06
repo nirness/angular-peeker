@@ -69,7 +69,11 @@ module.exports = function (grunt) {
                 'Gruntfile.js'
             ],
             tasks: [
-                'build-dev'
+                'clean:dist',
+                'concat:dev',
+                'copy:stylesDev',
+                'autoprefixer:dev',
+                'jshint:dist'
             ]
       }
     },
