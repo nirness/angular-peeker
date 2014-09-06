@@ -11,7 +11,18 @@
 <body ng-app="angularPeekerTest">
 
 <div ng-controller="MainCtrl">
-    Hello World!
+    <h1>English League</h1>
+    <table>
+        <tr ng-repeat="team in englishLeague.teams">
+            <td>{{team.name}}</td>
+            <td>{{team.matchesPlayed}}</td>
+            <td>{{team.wins}}</td>
+            <td>{{team.draws}}</td>
+            <td>{{team.losses}}</td>
+            <td>{{team.goalsFor}}</td>
+            <td>{{team.goalsAgainst}}</td>
+        </tr>
+    </table>
 </div>
 
 <!-- App Bower components -->
