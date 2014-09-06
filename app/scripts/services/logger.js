@@ -12,7 +12,7 @@ angular.module('angularPeeker')
         var config = {
             basicInfo: {
                 background: '#FFFF66',
-                color: 'FFFF66'
+                color: '000'
             }
         };
 
