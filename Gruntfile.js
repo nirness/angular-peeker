@@ -65,6 +65,7 @@ module.exports = function (grunt) {
             files: [
                 'bower.json',
                 '<%= yeoman.app %>/scripts/{,*/}*.js',
+                '<%= yeoman.app %>/styles/{,*/}*.css',
                 'Gruntfile.js'
             ],
             tasks: [
@@ -173,6 +174,14 @@ module.exports = function (grunt) {
           src: '{,*/}*.css',
           dest: '.tmp/styles/'
         }]
+      },
+        dev: {
+            files: [{
+                expand: true,
+                cwd: '<%= yeoman.dist %>/styles/',
+                src: '{,*/}*.css',
+                dest: '<%= yeoman.dist %>/styles/'
+            }]
       }
     },
 
@@ -359,6 +368,12 @@ module.exports = function (grunt) {
         cwd: '<%= yeoman.app %>/styles',
         dest: '.tmp/styles/',
         src: '{,*/}*.css'
+      },
+        stylesDev: {
+            expand: true,
+            cwd: '<%= yeoman.app %>/styles',
+            dest: '<%= yeoman.dist %>/styles/',
+            src: '{,*/}*.css'
       }
     },
 
@@ -435,6 +450,8 @@ module.exports = function (grunt) {
     grunt.registerTask('build-dev', [
         'clean:dist',
         'concat:dev',
+        'copy:stylesDev',
+        'autoprefixer:dev',
         'jshint:dist',
         'watch:dev'
     ]);
