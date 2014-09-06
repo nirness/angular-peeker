@@ -1,16 +1,21 @@
 angular.module('angularPeeker')
     .run([
+        '$rootScope',
         '$window',
         'config',
-        function ($window, config) {
+        'logger',
+        function ($rootScope, $window, config, logger) {
+            logger.l('angularPeeker: run: $rootScope', $rootScope);
+            logger.l('angularPeeker: run: $window', $window);
+            logger.l('angularPeeker: run: config', config);
+
             $window.addEventListener('keydown', function (evt) {
-                console.log(arguments);
                 var keyCode = config.peekerHotKey.key.toUpperCase().charCodeAt(0);
                 if ((evt.keyCode === keyCode) &&
                     (evt.altKey === config.peekerHotKey.altKey) &&
                     (evt.shiftKey === config.peekerHotKey.shiftKey) &&
                     (evt.ctrlKey === config.peekerHotKey.ctrlKey)) {
-                    console.log('Peeker Activated!');
+                    logger.l('Peeker Activated!');
                 }
             }, false);
         }

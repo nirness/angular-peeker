@@ -16,17 +16,22 @@ angular.module('angularPeeker', []);
 // Source: app/scripts/run.js
 angular.module('angularPeeker')
     .run([
+        '$rootScope',
         '$window',
         'config',
-        function ($window, config) {
+        'logger',
+        function ($rootScope, $window, config, logger) {
+            logger.l('angularPeeker: run: $rootScope', $rootScope);
+            logger.l('angularPeeker: run: $window', $window);
+            logger.l('angularPeeker: run: config', config);
+
             $window.addEventListener('keydown', function (evt) {
-                console.log(arguments);
                 var keyCode = config.peekerHotKey.key.toUpperCase().charCodeAt(0);
                 if ((evt.keyCode === keyCode) &&
                     (evt.altKey === config.peekerHotKey.altKey) &&
                     (evt.shiftKey === config.peekerHotKey.shiftKey) &&
                     (evt.ctrlKey === config.peekerHotKey.ctrlKey)) {
-                    console.log('Peeker Activated!');
+                    logger.l('Peeker Activated!');
                 }
             }, false);
         }
@@ -49,6 +54,56 @@ angular.module('angularPeeker')
             shiftKey: false,
             ctrlKey: true
         }
+    });
+
+// Source: app/scripts/services/logger.js
+/**
+ * @ngdoc service
+ * @name angularPeeker.logger
+ * @description
+ * # logger
+ * Factory in the angularPeeker.
+ */
+angular.module('angularPeeker')
+    .factory('logger', function () {
+        var config = {
+            basicInfo: {
+                background: '#FFFF66',
+                color: 'FFFF66'
+            }
+        };
+
+        var buildColorString = function (name) {
+            return 'background: ' + config[name].background + ';color: ' + config[name].color;
+        };
+
+        var convertArgumentsToArray = function (args, sliceFrom) {
+            return Array.prototype.slice.call(args, sliceFrom);
+        };
+
+        var logWColor = function (str, color) {
+            console.log(str, color);
+        };
+
+        var cLogArr = function (args) {
+            args.forEach(function (arg) {
+                console.log(arg);
+            });
+        };
+
+        var api = {
+            basicInfo: function () {
+                var firstArg = '%c' + arguments[0];
+                logWColor(firstArg, buildColorString('basicInfo'));
+                var args = convertArgumentsToArray(arguments, 1);
+                cLogArr(args);
+            }
+        };
+
+        // Public API here
+        return {
+            l: api.basicInfo
+        };
     });
 
 }());
