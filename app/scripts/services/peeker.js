@@ -15,9 +15,10 @@ angular.module('angularPeeker')
             this.$get = [
                 '$rootScope',
                 '$window',
+                '$compile',
                 'config',
                 'logger',
-                function ($rootScope, $window, config, logger) {
+                function ($rootScope, $window, $compile, config, logger) {
                     logger.l('angularPeeker: run: $rootScope', $rootScope);
                     logger.l('angularPeeker: run: $window', $window);
                     logger.l('angularPeeker: run: config', config);
@@ -29,6 +30,7 @@ angular.module('angularPeeker')
                     var peekerActivated = false;
                     var body = document.getElementsByTagName('body')[0];
                     var html = document.getElementsByTagName('html')[0];
+                    var watcher;
                     var eventListenersRemovers = [];
 
                     //===============================
@@ -63,7 +65,7 @@ angular.module('angularPeeker')
 
                     var activatePeeker = function () {
 
-                        $rootScope.$broadcast('angularpeeker:run:peekeractivated');
+                        $rootScope.$broadcast('angularpeeker:peeker:peekeractivated');
 
                         logger.l('Add class \'angularpeeker_peekerActivated\' to html', body);
                         angular.element(html).addClass('angularpeeker_peekerActivated');
@@ -93,10 +95,14 @@ angular.module('angularPeeker')
                             capturePahse: true
                         });
 
+
+                        //Display active strip
+                        var activeStrip = $compile('<peeker-strip></peeker-strip>')($rootScope);
+                        angular.element(body).append(activeStrip);
                     };
 
                     var deactivatePeeker = function () {
-                        $rootScope.$broadcast('angularpeeker:run:peekerdeactivated');
+                        $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
 
                         logger.l('Remove class \'angularpeeker_peekerActivated\' to html', body);
                         angular.element(html).removeClass('angularpeeker_peekerActivated');
@@ -110,6 +116,7 @@ angular.module('angularPeeker')
                         });
 
                         removeEventListeners();
+
                     };
 
                     var toggleActive = function () {
@@ -127,7 +134,13 @@ angular.module('angularPeeker')
                         logger.l('Selected element source: ', evt.srcElement);
                         logger.l('Selected scope: ', getScope(evt.srcElement));
 
-                        var selectedScope = getScope(evt.srcElement);
+                        var newScope = $rootScope.$new(true);
+                        newScope.selectedScope = getScope(evt.srcElement);
+                        newScope.selectedElement = angular.element(evt.srcElement);
+
+                        var watcher = $compile('<watcher></watcher>')(newScope);
+                        angular.element(body).append(watcher);
+
 
                     };
 
@@ -152,11 +165,6 @@ angular.module('angularPeeker')
                             toggleActive();
                         }
                     }, false);
-
-                    // When peeker activetd
-                    $rootScope.$on('angularpeeker:run:peekeractivated', function () {
-
-                    });
 
                     return new Peeker();
                 }];
