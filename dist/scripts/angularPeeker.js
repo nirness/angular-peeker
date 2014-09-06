@@ -13,6 +13,104 @@
 angular.module('angularPeeker', []);
 
 
+// Source: app/scripts/directives/peekerStrip.js
+    angular.module('angularPeeker')
+        .directive('peekerStrip', [
+            '$timeout',
+            function ($timeout) {
+                return {
+                    restrict: 'E',
+                    templateUrl: 'peeker-strip.html',
+                    controller: function ($scope, $element, $attrs) {
+                        $scope.removeStrip = function () {
+                            angular.element($element[0].querySelector('.peeker_strip')).addClass('underBottom').removeClass('bottom');
+                            $timeout(function () {
+                                angular.element.remove();
+                            }, 1200);
+                        };
+
+                        $scope.$on('angularpeeker:peeker:peekerdeactivated', function () {
+                            $scope.removeStrip();
+                        });
+                    },
+                    link: function (scope, element) {
+                        setTimeout(function () {
+                            angular.element(element[0].querySelector('.peeker_strip')).addClass('bottom').removeClass('underBottom');
+                        }, 200);
+                    }
+                };
+            }]);
+
+// Source: app/scripts/directives/watcher.js
+    angular.module('angularPeeker')
+        .directive('watcher', function () {
+
+            var getItemsToShow = function (scope) {
+                var functions = [],
+                    models = [],
+                    primitives = [],
+                    arrays = [],
+                    key;
+                for (key in scope) {
+                    if (scope.hasOwnProperty(key)) {
+
+                        if (angular.isString(scope[key]) ||
+                            angular.isNumber(scope[key]) ||
+                            scope[key] === false ||
+                            scope[key] === true) {
+                            if (key.indexOf('$$') !== 0) {
+                                primitives.push({
+                                    name: key,
+                                    value: scope[key]
+                                });
+                            }
+                        } else if (angular.isFunction(scope[key])) {
+                            if (key.indexOf('$$') !== 0) {
+                                functions.push({
+                                    name: key,
+                                    value: scope[key]
+                                });
+                            }
+                        } else if (angular.isArray(scope[key])) {
+                            if (key.indexOf('$$') !== 0) {
+                                arrays.push({
+                                    name: key,
+                                    value: scope[key]
+                                });
+                            }
+                        } else {
+                            if (key.indexOf('$$') !== 0) {
+                                models.push({
+                                    name: key,
+                                    value: scope[key]
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return {
+                    functions: functions,
+                    models: models,
+                    primitives: primitives,
+                    arrays: arrays
+                };
+
+            };
+
+            return {
+                restrict: 'E',
+                templateUrl: 'watcher.html',
+                controller: function ($scope, $element, $attrs) {
+                    // breakdown items to show
+                    $scope.itemsToShow = getItemsToShow($scope.selectedScope);
+
+                },
+                link: function (scope, element) {
+                }
+            };
+        });
+
 // Source: app/scripts/run.js
 angular.module('angularPeeker')
     .run([
@@ -135,9 +233,10 @@ angular.module('angularPeeker')
                 this.$get = [
                     '$rootScope',
                     '$window',
+                    '$compile',
                     'config',
                     'logger',
-                    function ($rootScope, $window, config, logger) {
+                    function ($rootScope, $window, $compile, config, logger) {
                         logger.l('angularPeeker: run: $rootScope', $rootScope);
                         logger.l('angularPeeker: run: $window', $window);
                         logger.l('angularPeeker: run: config', config);
@@ -149,6 +248,7 @@ angular.module('angularPeeker')
                         var peekerActivated = false;
                         var body = document.getElementsByTagName('body')[0];
                         var html = document.getElementsByTagName('html')[0];
+                        var watcher;
                         var eventListenersRemovers = [];
 
                         //===============================
@@ -174,7 +274,7 @@ angular.module('angularPeeker')
 
                             var remover = function () {
                                 configObj.obj.removeEventListener(configObj.eventType, configObj.handler, configObj.capturePhase);
-                            };
+                        };
 
                             eventListenersRemovers.push(remover);
 
@@ -183,7 +283,7 @@ angular.module('angularPeeker')
 
                         var activatePeeker = function () {
 
-                            $rootScope.$broadcast('angularpeeker:run:peekeractivated');
+                            $rootScope.$broadcast('angularpeeker:peeker:peekeractivated');
 
                             logger.l('Add class \'angularpeeker_peekerActivated\' to html', body);
                             angular.element(html).addClass('angularpeeker_peekerActivated');
@@ -213,10 +313,14 @@ angular.module('angularPeeker')
                                 capturePahse: true
                             });
 
+
+                            //Display active strip
+                            var activeStrip = $compile('<peeker-strip></peeker-strip>')($rootScope);
+                            angular.element(body).append(activeStrip);
                         };
 
                         var deactivatePeeker = function () {
-                            $rootScope.$broadcast('angularpeeker:run:peekerdeactivated');
+                            $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
 
                             logger.l('Remove class \'angularpeeker_peekerActivated\' to html', body);
                             angular.element(html).removeClass('angularpeeker_peekerActivated');
@@ -230,6 +334,7 @@ angular.module('angularPeeker')
                             });
 
                             removeEventListeners();
+
                         };
 
                         var toggleActive = function () {
@@ -247,7 +352,13 @@ angular.module('angularPeeker')
                             logger.l('Selected element source: ', evt.srcElement);
                             logger.l('Selected scope: ', getScope(evt.srcElement));
 
-                            var selectedScope = getScope(evt.srcElement);
+                            var newScope = $rootScope.$new(true);
+                            newScope.selectedScope = getScope(evt.srcElement);
+                            newScope.selectedElement = angular.element(evt.srcElement);
+
+                            var watcher = $compile('<watcher></watcher>')(newScope);
+                            angular.element(body).append(watcher);
+
 
                         };
 
@@ -273,13 +384,48 @@ angular.module('angularPeeker')
                             }
                         }, false);
 
-                        // When peeker activetd
-                        $rootScope.$on('angularpeeker:run:peekeractivated', function () {
-
-                        });
-
                         return new Peeker();
                     }];
             }]);
+
+// Source: app/scripts/services/scopewatcher.js
+    /**
+     * @ngdoc service
+     * @name angularPeeker.scopeWatcher
+     * @description
+     * # scopeWatcher
+     * Provider in the angularPeeker.
+     */
+    angular.module('angularPeeker')
+        .provider('scopeWatcher', function () {
+
+            // Method for instantiating
+            this.$get = [
+                '$compile',
+                function ($compile) {
+
+                }
+            ];
+        });
+
+// Source: app/scripts/templateCache.js
+    angular.module('angularPeeker')
+        .run([
+            '$templateCache',
+            function ($templateCache) {
+                // Create watcher template
+                var watcherHtml = '' +
+                    '<h1>Watcher</h1>' +
+                    '<h2>' +
+                    'This is a watcher' +
+                    '</h2>';
+
+                $templateCache.put('watcher.html', watcherHtml);
+
+                //peeker strip
+                var peekerStrip = '<div class="angularpeeker peeker_strip underBottom">Angular-Peeker is active</div>';
+                $templateCache.put('peeker-strip.html', peekerStrip);
+            }
+        ]);
 
 }());

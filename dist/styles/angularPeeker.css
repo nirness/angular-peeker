@@ -1,0 +1,34 @@
+.angularpeeker_peekerActivated {
+    cursor: crosshair;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.angularpeeker_elementHovered {
+    background-color: #ffe0d9;
+    box-sizing: border-box;
+    border: 2px solid red;
+}
+
+.angularpeeker.peeker_strip {
+    position: fixed;
+    background-color: rgb(36, 102, 49);
+    display: block;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    color: rgb(198, 223, 204);
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    transition: bottom 1s;
+}
+
+.angularpeeker.peeker_strip.underBottom {
+    bottom: -40px;
+}
+
+.angularpeeker.peeker_strip.bottom {
+    bottom: 0px;
+}
