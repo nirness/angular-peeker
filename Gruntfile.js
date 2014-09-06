@@ -65,12 +65,11 @@ module.exports = function (grunt) {
             files: [
                 'bower.json',
                 '<%= yeoman.app %>/scripts/{,*/}*.js',
-                '<%= yeoman.app %>/styles/{,*/}*.css',
+                '<%= yeoman.app %>/styles/{,*/}*.*',
                 'Gruntfile.js'
             ],
             tasks: [
-                'concat:dev',
-                'jshint:dist'
+                'build-dev'
             ]
       }
     },
@@ -126,7 +125,8 @@ module.exports = function (grunt) {
     jshint: {
       options: {
         jshintrc: '.jshintrc',
-        reporter: require('jshint-stylish')
+          reporter: require('jshint-stylish'),
+          force: true
       },
       all: {
         src: [
@@ -373,7 +373,7 @@ module.exports = function (grunt) {
             expand: true,
             cwd: '<%= yeoman.app %>/styles',
             dest: '<%= yeoman.dist %>/styles/',
-            src: '{,*/}*.css'
+            src: '*.*'
       }
     },
 
