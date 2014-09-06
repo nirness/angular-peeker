@@ -1,8 +1,11 @@
-.peekerActivated {
+.angularpeeker_peekerActivated {
     cursor: crosshair;
     user-select: none;
 }
 
-.elementHovered {
-    background-color: #ff9e99;
+.angularpeeker_elementHovered {
+    background-color: #ffe0d9;
+    box-sizing: border-box;
+    border: 2px solid red;
+
 }
