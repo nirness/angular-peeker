@@ -60,6 +60,17 @@ module.exports = function (grunt) {
           '.tmp/styles/{,*/}*.css',
           '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
         ]
+      },
+        dev: {
+            files: [
+                'bower.json',
+                '<%= yeoman.app %>/scripts/{,*/}*.js',
+                'Gruntfile.js'
+            ],
+            tasks: [
+                'concat:dev',
+                'jshint:dist'
+            ]
       }
     },
 
@@ -127,6 +138,11 @@ module.exports = function (grunt) {
           jshintrc: 'test/.jshintrc'
         },
         src: ['test/spec/{,*/}*.js']
+      },
+        dist: {
+            src: [
+                '<%= yeoman.dist %>/scripts/{,*/}*.js'
+            ]
       }
     },
 
@@ -215,27 +231,45 @@ module.exports = function (grunt) {
     // By default, your `index.html`'s <!-- Usemin block --> will take care of
     // minification. These next options are pre-configured if you do not wish
     // to use the Usemin blocks.
-    // cssmin: {
-    //   dist: {
-    //     files: {
-    //       '<%= yeoman.dist %>/styles/main.css': [
-    //         '.tmp/styles/{,*/}*.css'
-    //       ]
-    //     }
-    //   }
-    // },
-    // uglify: {
-    //   dist: {
-    //     files: {
-    //       '<%= yeoman.dist %>/scripts/scripts.js': [
-    //         '<%= yeoman.dist %>/scripts/scripts.js'
-    //       ]
-    //     }
-    //   }
-    // },
-    // concat: {
-    //   dist: {}
-    // },
+      cssmin: {
+          dist: {
+              files: {
+                  '<%= yeoman.dist %>/styles/main.css': [
+                      '.tmp/styles/{,*/}*.css'
+                  ]
+              }
+          }
+      },
+      uglify: {
+          dist: {
+              files: {
+                  '<%= yeoman.dist %>/scripts/scripts.js': [
+                      '<%= yeoman.dist %>/scripts/scripts.js',
+                      'app/scripts/**/*.js'
+                  ]
+              }
+          }
+      },
+      concat: {
+          options: {
+              sepertaor: ';',
+              // Replace all 'use strict' statements in the code with a single one at the top
+              banner: '(function(){\n\'use strict\';\n',
+              process: function (src, filepath) {
+                  return '// Source: ' + filepath + '\n' +
+                  src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
+              },
+              footer: '\n}());'
+          },
+          dist: {},
+          dev: {
+              files: {
+                  '<%= yeoman.dist %>/scripts/angularPeeker.js': [
+                      'app/scripts/**/*.js'
+                  ]
+              }
+          }
+      },
 
     imagemin: {
       dist: {
@@ -397,6 +431,13 @@ module.exports = function (grunt) {
     'usemin',
     'htmlmin'
   ]);
+
+    grunt.registerTask('build-dev', [
+        'clean:dist',
+        'concat:dev',
+        'jshint:dist',
+        'watch:dev'
+    ]);
 
   grunt.registerTask('default', [
     'newer:jshint',
