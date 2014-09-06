@@ -63,7 +63,7 @@ angular.module('angularPeeker', []);
                                     name: key,
                                     value: scope[key]
                                 });
-                            }
+                        }
                         } else if (angular.isFunction(scope[key])) {
                             if (key.indexOf('$$') !== 0) {
                                 functions.push({
@@ -85,8 +85,8 @@ angular.module('angularPeeker', []);
                                     value: scope[key]
                                 });
                             }
-                        }
                     }
+                }
                 }
 
                 return {
@@ -94,7 +94,7 @@ angular.module('angularPeeker', []);
                     models: models,
                     primitives: primitives,
                     arrays: arrays
-                };
+            };
 
             };
 
