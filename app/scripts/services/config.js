@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc service
  * @name angularPeeker.config
@@ -11,8 +9,8 @@ angular.module('angularPeeker')
   .value('config', {
         peekerHotKey: {
             key: 'p',
-            alt: true,
-            control: true,
-            shift: false
+            altKey: true,
+            shiftKey: false,
+            ctrlKey: true
         }
     });

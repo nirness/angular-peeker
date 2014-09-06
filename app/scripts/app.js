@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc overview
  * @name angularPeeker
@@ -10,3 +8,4 @@
  */
 
 angular.module('angularPeeker', []);
+
