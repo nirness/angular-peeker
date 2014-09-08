@@ -29,3 +29,101 @@
 .angularpeeker.peeker_strip.bottom {
     bottom: 0;
 }
+
+.angular_peeker_container {
+    display: inline-block;
+    position: fixed;
+    width: 80%;
+    left: 10%;
+    top: 10%;
+    bottom: 10%;
+    background-color: rgba(212, 210, 209, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    overflow: auto;
+}
+
+span.angularpeeker.label_wrapper {
+    width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+}
+
+.angularpeeker.object_div_wrapper {
+    display: inline-block;
+    background-color: rgba(186, 218, 189, 1);
+    padding: 10px 5px 5px 1px;
+    margin: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+}
+
+.angularpeeker.array_div_wrapper {
+    background-color: rgba(224, 220, 166, 1);
+    border: 1px solid rgba(24, 5, 100, 0.16);
+    display: inline-block;
+    padding-top: 10px;
+    border-radius: 10px;
+}
+
+.angularpeeker.generic_wrapper {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    background-color: ghostwhite;
+    border-radius: 6px;
+}
+
+input.string.angularpeeker {
+    background-color: rgb(233, 209, 179);
+}
+
+input.number.angularpeeker {
+    background-color: rgb(183, 255, 142);
+}
+
+input.boolean.angularpeeker {
+    background-color: rgb(248, 196, 255);
+}
+
+.indent1 {
+    margin-left: 15px;
+}
+
+.indent2 {
+    margin-left: 30px;
+}
+
+.indent3 {
+    margin-left: 45px;
+}
+
+.indent4 {
+    margin-left: 60px;
+}
+
+.indent5 {
+    margin-left: 75px;
+}
+
+.indent6 {
+    margin-left: 90px;
+}
+
+.indent7 {
+    margin-left: 105px;
+}
+
+.indent8 {
+    margin-left: 120px;
+}
+
+.indent9 {
+    margin-left: 135px;
+}
+
+.indent10 {
+    margin-left: 150px;
+}
