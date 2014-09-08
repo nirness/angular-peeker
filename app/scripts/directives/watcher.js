@@ -1,68 +1,29 @@
 angular.module('angularPeeker')
-    .directive('watcher', function () {
+    .directive('watcher', [
+        'ScopeShow',
+        function (ScopeShow) {
+            var doc;
 
-        var getItemsToShow = function (scope) {
-            var functions = [],
-                models = [],
-                primitives = [],
-                arrays = [],
-                key;
-            for (key in scope) {
-                if (scope.hasOwnProperty(key)) {
-
-                    if (angular.isString(scope[key]) ||
-                        angular.isNumber(scope[key]) ||
-                        scope[key] === false ||
-                        scope[key] === true) {
-                        if (key.indexOf('$$') !== 0) {
-                            primitives.push({
-                                name: key,
-                                value: scope[key]
-                            });
-                        }
-                    } else if (angular.isFunction(scope[key])) {
-                        if (key.indexOf('$$') !== 0) {
-                            functions.push({
-                                name: key,
-                                value: scope[key]
-                            });
-                        }
-                    } else if (angular.isArray(scope[key])) {
-                        if (key.indexOf('$$') !== 0) {
-                            arrays.push({
-                                name: key,
-                                value: scope[key]
-                            });
-                        }
-                    } else {
-                        if (key.indexOf('$$') !== 0) {
-                            models.push({
-                                name: key,
-                                value: scope[key]
-                            });
-                        }
-                    }
-                }
-            }
 
             return {
-                functions: functions,
-                models: models,
-                primitives: primitives,
-                arrays: arrays
+                restrict: 'E',
+                templateUrl: 'watcher.html',
+                controller: function ($scope, $element, $attrs) {
+                    $scope.toggleShow = function () {
+                        if ($element[0].style.opacity === '1') {
+                            $element[0].style.opacity = '0.1';
+                        } else {
+                            $element[0].style.opacity = '1';
+                        }
+                    };
+                },
+                link: function (scope, element) {
+                    var link = ScopeShow.createDisplayModel(
+                        scope.selectedScope,
+                        null,
+                        'selectedScope');
+                    doc = link(scope);
+                    element[0].querySelector('.angular_peeker_container').appendChild(doc[0]);
+                }
             };
-
-        };
-
-        return {
-            restrict: 'E',
-            templateUrl: 'watcher.html',
-            controller: function ($scope, $element, $attrs) {
-                // breakdown items to show
-                $scope.itemsToShow = getItemsToShow($scope.selectedScope);
-
-            },
-            link: function (scope, element) {
-            }
-        };
-    });
+        }]);
