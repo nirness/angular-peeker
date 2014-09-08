@@ -9,7 +9,7 @@ angular.module('angularPeeker')
                     $scope.removeStrip = function () {
                         angular.element($element[0].querySelector('.peeker_strip')).addClass('underBottom').removeClass('bottom');
                         $timeout(function () {
-                            angular.element.remove();
+                            $element.remove();
                         }, 1200);
                     };
 
