@@ -19,18 +19,14 @@ angular.module('angularPeeker')
                 'config',
                 'logger',
                 function ($rootScope, $window, $compile, config, logger) {
-                    logger.l('angularPeeker: run: $rootScope', $rootScope);
-                    logger.l('angularPeeker: run: $window', $window);
-                    logger.l('angularPeeker: run: config', config);
-
 
                     //===============================
                     //      Private variables       =
                     //===============================
-                    var peekerActivated = false;
+                    var peekerActivated = false, selectorActivated = false;
+                    var mouseOverListenerRemover, mouseOutListenerRemover, clickListenerRemover;
                     var body = document.getElementsByTagName('body')[0];
                     var html = document.getElementsByTagName('html')[0];
-                    var watcher;
                     var eventListenersRemovers = [];
 
                     //===============================
@@ -63,14 +59,8 @@ angular.module('angularPeeker')
                         return remover;
                     };
 
-                    var activatePeeker = function () {
-
-                        $rootScope.$broadcast('angularpeeker:peeker:peekeractivated');
-
-                        logger.l('Add class \'angularpeeker_peekerActivated\' to html', body);
-                        angular.element(html).addClass('angularpeeker_peekerActivated');
-
-                        on({
+                    var activateSelector = function () {
+                        mouseOverListenerRemover = on({
                             eventType: 'mouseover',
                             handler: function (evt) {
                                 angular.element(evt.srcElement).addClass('angularpeeker_elementHovered');
@@ -78,7 +68,7 @@ angular.module('angularPeeker')
                             capturePahse: true
                         });
 
-                        on({
+                        mouseOutListenerRemover = on({
                             eventType: 'mouseout',
                             handler: function (evt) {
                                 angular.element(evt.srcElement).removeClass('angularpeeker_elementHovered');
@@ -86,29 +76,52 @@ angular.module('angularPeeker')
                             capturePahse: true
                         });
 
-                        on({
+                        clickListenerRemover = on({
                             eventType: 'click',
                             handler: function (evt) {
                                 evt.stopImmediatePropagation();
                                 displayScope(evt);
+                                deactivateSelector();
                             },
                             capturePahse: true
                         });
 
+                    };
+
+                    var deactivateSelector = function () {
+                        mouseOverListenerRemover();
+                        mouseOutListenerRemover();
+                        clickListenerRemover();
+                        angular.element(html).removeClass('angularpeeker_peekerActivated');
+                    };
+
+                    var toggleSelector = function () {
+                        if (!selectorActivated) {
+                            activateSelector();
+                        } else {
+                            deactivateSelector();
+                        }
+                        selectorActivated = !selectorActivated;
+                    };
+
+                    var activatePeeker = function () {
+
+                        $rootScope.$broadcast('angularpeeker:peeker:peekeractivated');
+
+                        angular.element(html).addClass('angularpeeker_peekerActivated');
 
                         //Display active strip
                         var activeStrip = $compile('<peeker-strip></peeker-strip>')($rootScope);
                         angular.element(body).append(activeStrip);
+
+                        activateSelector();
                     };
 
                     var deactivatePeeker = function () {
                         $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
 
-                        logger.l('Remove class \'angularpeeker_peekerActivated\' to html', body);
-                        angular.element(html).removeClass('angularpeeker_peekerActivated');
 
                         //remove all angularpeeker_elementHovered classes
-
                         var elems = document.getElementsByClassName('angularpeeker_elementHovered');
                         elems = Array.prototype.slice.call(elems);
                         elems.forEach(function (elem) {
@@ -117,22 +130,21 @@ angular.module('angularPeeker')
 
                         removeEventListeners();
 
+                        deactivateSelector();
+
                     };
 
                     var toggleActive = function () {
                         if (!peekerActivated) {
                             activatePeeker();
-                            logger.l('Peeker activated!');
                         } else {
                             deactivatePeeker();
-                            logger.l('Peeker dectivated!');
                         }
                         peekerActivated = !peekerActivated;
                     };
 
+
                     var displayScope = function (evt) {
-                        logger.l('Selected element source: ', evt.srcElement);
-                        logger.l('Selected scope: ', getScope(evt.srcElement));
 
                         var newScope = $rootScope.$new(true);
                         newScope.selectedScope = getScope(evt.srcElement);
