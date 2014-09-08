@@ -15,6 +15,8 @@ angular.module('angularPeeker')
                 ctrlKey: true
             };
 
+            var queryDepth = 5;
+
             // Public API for configuration
             this.setActivationKey = function (key) {
                 peekerHotKey.key = key;
@@ -36,9 +38,19 @@ angular.module('angularPeeker')
                 }
             };
 
+            this.getQueryDepth = function () {
+                return queryDepth;
+            };
+
+            this.setQueryDepth = function (val) {
+                queryDepth = val;
+                return queryDepth;
+            };
+
             this.$get = function () {
                 return {
-                    peekerHotKey: peekerHotKey
+                    peekerHotKey: peekerHotKey,
+                    queryDepth: queryDepth
                 };
             };
         }
