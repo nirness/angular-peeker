@@ -5,7 +5,8 @@
         .directive('scopeViewer', [
             'scopeViewBuilder',
             'methodInvoker',
-            function (scopeViewBuilder, methodInvoker) {
+            '$compile',
+            function (scopeViewBuilder, methodInvoker, $compile) {
                 var viewer;
 
                 return {
@@ -16,6 +17,13 @@
                         //===============
                         $scope.invokeMethod = function (methodName) {
                             methodInvoker.invoke($scope.selectedScope, methodName);
+                        };
+
+                        $scope.viewMethod = function (name) {
+                            var view = '<method-viewer method-name="\'' + name +
+                                '\'" selected-scope="selectedScope"></method-viewer>';
+                            var dom = $compile(view)($scope);
+                            document.body.appendChild(dom[0]);
                         };
 
                         // Cleanup
