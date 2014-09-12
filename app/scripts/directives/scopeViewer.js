@@ -4,16 +4,22 @@
     angular.module('angularPeeker')
         .directive('scopeViewer', [
             'scopeViewBuilder',
-            function (scopeViewBuilder) {
+            'methodInvoker',
+            function (scopeViewBuilder, methodInvoker) {
                 var viewer;
 
                 return {
                     restrict: 'E',
                     templateUrl: 'scopeViewer.html',
                     controller: function ($scope, $element, $attrs) {
+                        // $scope methods
+                        //===============
+                        $scope.invokeMethod = function (methodName) {
+                            methodInvoker.invoke($scope.selectedScope, methodName);
+                        };
 
                         // Cleanup
-                        $element.on('$destroy', function (evt) {
+                        $element.on('$destroy', function () {
                             $scope = null;
                         });
                     },
