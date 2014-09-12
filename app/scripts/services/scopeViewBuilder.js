@@ -148,7 +148,7 @@
                             var key;
                             for (key in obj) {
                                 if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
-                                    scopeViewBuilder.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
+                                    ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
                                 }
                             }
                         },
@@ -163,7 +163,7 @@
                             displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
                             arr.forEach(function (item, index) {
-                                scopeViewBuilder.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
+                                ScopeViewBuilder.prototype.buildScopeView(item, wrapper, path + '[' + index + ']', depth);
                             });
 
                         },
@@ -206,11 +206,11 @@
                     //===========================
                     //      Private Constructor =
                     //===========================
-                    var scopeViewBuilder = function () {
+                    var ScopeViewBuilder = function () {
                     };
 
 
-                    scopeViewBuilder.prototype.createDisplayModel = function (model, doc, path, depth) {
+                    ScopeViewBuilder.prototype.buildScopeView = function (model, doc, path, depth) {
                         // Create doc if it wasn't passed
                         doc = (doc) ? doc : createObjDivWrapper();
                         // Set the depth
@@ -238,7 +238,7 @@
 
                     };
 
-                    return new scopeViewBuilder();
+                    return new ScopeViewBuilder();
                 }
             ];
         });
