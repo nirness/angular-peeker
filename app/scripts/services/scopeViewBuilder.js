@@ -176,6 +176,16 @@
 
                                 var wrapper = createFunctionDivWrapper();
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+
+                                // Add an input and an invoke button
+                                var inp = createElementWrapper('input', 'angularpeeker function_elements for_' + name);
+                                wrapper.appendChild(inp);
+
+                                var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
+                                invokeButton.innerHTML = 'Call';
+                                angular.element(invokeButton).attr('ng-click', 'invokeFunction(\'' + name + '\')');
+                                wrapper.appendChild(invokeButton);
+
                             },
                             'primitive': function (doc, path, type, depth) {
                                 // Get The name
