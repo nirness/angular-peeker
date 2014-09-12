@@ -2,6 +2,9 @@ angular.module('angularPeekerTest')
     .controller('MainCtrl', [
         '$scope',
         function ($scope) {
+            $scope.sayHello = function () {
+                alert('Hello');
+            };
             $scope.englishLeague = {
                 teams: [
                     {
