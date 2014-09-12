@@ -18,7 +18,8 @@ angular.module('angularPeeker')
                 '$compile',
                 'config',
                 'logger',
-                function ($rootScope, $window, $compile, config, logger) {
+                'domActions',
+                function ($rootScope, $window, $compile, config, logger, domActions) {
 
                     //===============================
                     //      Private variables       =
@@ -59,7 +60,20 @@ angular.module('angularPeeker')
                         return remover;
                     };
 
+                    var removeElementHoveredClass = function () {
+                        var elements = domActions.find('.angularpeeker_elementHovered');
+                        domActions.removeClass('angularpeeker_elementHovered', elements);
+                    };
+
                     var activateSelector = function () {
+                        // Set class angularpeeker_peekerActivated if html does not have that class
+                        if (html.className.indexOf('angularpeeker_peekerActivated') === -1) {
+                            angular.element(html).addClass('angularpeeker_peekerActivated');
+                        }
+
+                        // remove all angularpeeker_elementHovered classes from dom
+                        removeElementHoveredClass();
+
                         mouseOverListenerRemover = on({
                             eventType: 'mouseover',
                             handler: function (evt) {
@@ -86,6 +100,8 @@ angular.module('angularPeeker')
                             capturePahse: true
                         });
 
+                        $rootScope.$broadcast('angularpeeker:peeker:selectoractivated');
+
                     };
 
                     var deactivateSelector = function () {
@@ -93,6 +109,8 @@ angular.module('angularPeeker')
                         mouseOutListenerRemover();
                         clickListenerRemover();
                         angular.element(html).removeClass('angularpeeker_peekerActivated');
+
+                        $rootScope.$broadcast('angularpeeker:peeker:selectordeactivated');
                     };
 
                     var toggleSelector = function () {
@@ -120,13 +138,8 @@ angular.module('angularPeeker')
                     var deactivatePeeker = function () {
                         $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
 
-
-                        //remove all angularpeeker_elementHovered classes
-                        var elems = document.getElementsByClassName('angularpeeker_elementHovered');
-                        elems = Array.prototype.slice.call(elems);
-                        elems.forEach(function (elem) {
-                            angular.element(elem).removeClass('angularpeeker_elementHovered');
-                        });
+                        // remove all angularpeeker_elementHovered classes from dom
+                        removeElementHoveredClass();
 
                         removeEventListeners();
 
@@ -152,7 +165,7 @@ angular.module('angularPeeker')
                         var watcher = $compile('<scope-viewer></scope-viewer>')(newScope);
                         angular.element(body).append(watcher);
 
-                        $rootScope.$broadcast('angularpeeker:peeker:scopevieweractive');
+                        $rootScope.$broadcast('angularpeeker:peeker:scopevieweractivated');
 
                     };
 
@@ -177,6 +190,14 @@ angular.module('angularPeeker')
                             toggleActive();
                         }
                     }, false);
+
+
+                    //===========================
+                    //      Listeners           =
+                    //===========================
+                    $rootScope.$on('angularpeeker:peekerstrip:requestselectoractivate', function () {
+                        activateSelector();
+                    });
 
                     return new Peeker();
                 }];
