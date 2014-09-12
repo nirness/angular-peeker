@@ -73,6 +73,16 @@ span.angularpeeker.label_wrapper {
     border-radius: 10px;
 }
 
+.angularpeeker.function_div_wrapper {
+    background-color: #C49BEB;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.angularpeeker.function_div_wrapper .button {
+    margin-left: 10px;
+}
+
 .angularpeeker.generic_wrapper {
     border: 1px solid rgba(0, 0, 0, 0.2);
     background-color: ghostwhite;
@@ -191,4 +201,6 @@ input.boolean.angularpeeker {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#dcdcdc', endColorstr='#d2d2d2', GradientType=0); /* IE6-9 */
     color: #7c7c7c;
 }
+
+
 
