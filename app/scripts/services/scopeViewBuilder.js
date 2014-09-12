@@ -147,7 +147,7 @@
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
                                 for (key in obj) {
-                                    if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
+                                    if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent' && key !== '$root') {
                                         ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
                                     }
                                 }
