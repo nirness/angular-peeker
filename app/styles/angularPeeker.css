@@ -164,6 +164,23 @@ input.boolean.angularpeeker {
 
 }
 
+.angularpeeker.method_viewer {
+    position: fixed;
+    background: #353535;
+    width: 70%;
+    left: 10%;
+    height: 50%;
+    color: rgb(249, 255, 105);
+    padding: 5%;
+    overflow: auto;
+}
+
+.angularpeeker.method_viewer .button {
+    position: absolute;
+    bottom: 20px;
+}
+
+
 /********************
      Gradients
 *********************/
