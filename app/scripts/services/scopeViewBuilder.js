@@ -183,8 +183,14 @@
 
                                 var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
                                 invokeButton.innerHTML = 'Call';
-                                angular.element(invokeButton).attr('ng-click', 'invokeFunction(\'' + name + '\')');
+                                angular.element(invokeButton).attr('ng-click', 'invokeMethod(\'' + name + '\')');
                                 wrapper.appendChild(invokeButton);
+
+                                var viewMethodButton = createElementWrapper('div', 'button view_function live_gradient_yellow');
+                                viewMethodButton.innerHTML = 'View';
+                                angular.element(viewMethodButton).attr('ng-click', 'viewMethod(\'' + name + '\')');
+                                wrapper.appendChild(viewMethodButton);
+
 
                             },
                             'primitive': function (doc, path, type, depth) {
