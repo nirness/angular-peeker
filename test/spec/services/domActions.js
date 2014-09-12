@@ -121,4 +121,31 @@ describe('Service: domActions', function () {
 
     });
 
+    describe('removeClass() method', function () {
+        var doc;
+        beforeEach(function () {
+            var div1 = document.createElement('div');
+            div1.className = 'some_class';
+            var div2 = document.createElement('div');
+            div2.className = 'some_class';
+            doc = angular.element([div1, div2]);
+        });
+
+        it('the first div in doc should be without class some_class', function () {
+            expect(doc[0].className).toBe('some_class');
+            expect(doc[1].className).toBe('some_class');
+            domActions.removeClass('some_class', doc[0]);
+            expect(doc[0].className).toBe('');
+            expect(doc[1].className).toBe('some_class');
+        });
+
+        it('all divs in doc should be without class some_class', function () {
+            expect(doc[0].className).toBe('some_class');
+            expect(doc[1].className).toBe('some_class');
+            domActions.removeClass('some_class', doc);
+            expect(doc[0].className).toBe('');
+            expect(doc[1].className).toBe('');
+        });
+    });
+
 });
