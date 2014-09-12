@@ -73,7 +73,8 @@ module.exports = function (grunt) {
                 'concat:dev',
                 'copy:stylesDev',
                 'autoprefixer:dev',
-                'jshint:dist'
+                'jshint:dist',
+                'test'
             ]
       }
     },
@@ -457,7 +458,8 @@ module.exports = function (grunt) {
         'copy:stylesDev',
         'autoprefixer:dev',
         'jshint:dist',
-        'watch:dev'
+        'watch:dev',
+        'test'
     ]);
 
   grunt.registerTask('default', [

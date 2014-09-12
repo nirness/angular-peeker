@@ -10,14 +10,18 @@ angular.module('angularPeeker')
                 templateUrl: 'scopeViewer.html',
                 controller: function ($scope, $element, $attrs) {
 
+                    // Cleanup
+                    $element.on('$destroy', function (evt) {
+                        $scope = null;
+                    });
                 },
                 link: function (scope, element) {
 
 
                     // scope methods
                     //==============
-                    scope.killViewer = function () {
-                        element[0].querySelector('.angular_peeker_container').removeChild(viewer[0]);
+                    scope.destroyViewer = function () {
+                        element.remove();
                         viewer = null;
                     };
 
@@ -56,6 +60,10 @@ angular.module('angularPeeker')
                         } else {
                             scope.showElement();
                         }
+                    });
+
+                    scope.$on('angularpeeker:peekerstrip:requestdestroyviewer', function () {
+                        scope.destroyViewer();
                     });
                 }
             };

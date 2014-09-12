@@ -26,6 +26,7 @@ angular.module('angularPeeker')
                     // Init
                     $scope.scopeViewerState = 'Hide';
                     $scope.scopeViewerActive = false;
+                    $scope.selectorActive = true;
 
                     $scope.toggleShowHideText = function () {
                         $scope.scopeViewerState = $scope.scopeViewerState === 'Hide' ? 'Show' : 'Hide';
@@ -34,6 +35,22 @@ angular.module('angularPeeker')
                     $scope.toggleShowHideState = function () {
                         $rootScope.$broadcast('angularpeeker:peekerstrip:requesttogglestate', $scope.scopeViewerState);
                         $scope.toggleShowHideText();
+                    };
+
+                    $scope.activateSelector = function ($event) {
+                        // Prevent the click event from becoming the selector target
+                        $event.preventDefault();
+                        $event.stopPropagation();
+
+                        // Set the strips state params
+                        $scope.scopeViewerState = 'Hide';
+                        $scope.scopeViewerActive = false;
+
+                        // Broadcast requestdestroyviewer To destroy the scope viewer
+                        $rootScope.$broadcast('angularpeeker:peekerstrip:requestdestroyviewer', $scope.scopeViewerState);
+
+                        // Broadcast requestselectoractivate To activate the element selector
+                        $rootScope.$broadcast('angularpeeker:peekerstrip:requestselectoractivate', $scope.scopeViewerState);
                     };
 
                     $scope.removeStrip = function () {
@@ -45,12 +62,20 @@ angular.module('angularPeeker')
 
 
                     //Setup scope listeners
-                    $scope.$on('angularpeeker:peeker:scopevieweractive', function () {
+                    $scope.$on('angularpeeker:peeker:scopevieweractivated', function () {
                         $scope.scopeViewerActive = true;
                     });
 
                     $scope.$on('angularpeeker:peeker:peekerdeactivated', function () {
                         $scope.removeStrip();
+                    });
+
+                    $scope.$on('angularpeeker:peeker:selectoractivated', function () {
+                        $scope.selectorActive = true;
+                    });
+
+                    $scope.$on('angularpeeker:peeker:selectordeactivated', function () {
+                        $scope.selectorActive = false;
                     });
                 },
                 link: function (scope, element) {
@@ -75,14 +100,18 @@ angular.module('angularPeeker')
                 templateUrl: 'scopeViewer.html',
                 controller: function ($scope, $element, $attrs) {
 
+                    // Cleanup
+                    $element.on('$destroy', function (evt) {
+                        $scope = null;
+                    });
                 },
                 link: function (scope, element) {
 
 
                     // scope methods
                     //==============
-                    scope.killViewer = function () {
-                        element[0].querySelector('.angular_peeker_container').removeChild(viewer[0]);
+                    scope.destroyViewer = function () {
+                        element.remove();
                         viewer = null;
                     };
 
@@ -121,6 +150,10 @@ angular.module('angularPeeker')
                         } else {
                             scope.showElement();
                         }
+                    });
+
+                    scope.$on('angularpeeker:peekerstrip:requestdestroyviewer', function () {
+                        scope.destroyViewer();
                     });
                 }
             };
@@ -194,6 +227,173 @@ angular.module('angularPeeker')
         }
     ]);
 
+// Source: app/scripts/services/domActions.js
+    (function () {
+        /**
+         * @ngdoc service
+         * @name angularPeeker.domActions
+         * @description
+         * # domActions
+         * factory in the angularPeeker.
+         */
+        angular.module('angularPeeker')
+            .factory('domActions', function () {
+                var html = document.getElementsByTagName('html')[0],
+                    body = document.getElementsByTagName('body')[0];
+
+
+                var factory = {
+
+                    /**
+                     *
+                     * @param elems
+                     * @returns {string}
+                     */
+                    getElementsType: function (elems) {
+                        if (elems instanceof Array) {
+                            return 'Array';
+                        } else if (elems instanceof NodeList || elems instanceof HTMLCollection) {
+                            return 'NodeList';
+                        } else if (elems instanceof Node) {
+                            return 'Node';
+                        } else if (elems.scope && elems.injector && elems.length !== undefined) {
+                            return 'angular';
+                        } else if (typeof elems === 'string') {
+                            return 'string';
+                        }
+                    },
+                    convertElemsToArray: {
+                        /**
+                         *
+                         * @param elems {Array}
+                         * @returns {*}
+                         */
+                        'Array': function (elems) {
+                            return elems;
+                        },
+                        /**
+                         *
+                         * @param elems {NodeList}
+                         * @returns {*|Array.<T>}
+                         */
+                        'NodeList': function (elems) {
+                            return Array.prototype.slice.call(elems);
+                        },
+                        /**
+                         *
+                         * @param elem {Node}
+                         * @returns {Array|[]}
+                         */
+                        'Node': function (elem) {
+                            return [elem]
+                        },
+                        /**
+                         *
+                         * @param elems
+                         * @returns {Array|[]}
+                         */
+                        'angular': function (elems) {
+                            var length = elems.length,
+                                arr = [],
+                                i;
+
+                            for (i = 0; i < length; i += 1) {
+                                arr.push(elems[i]);
+                            }
+
+                            return arr;
+                        },
+                        /**
+                         *
+                         * @param str
+                         * @returns {Array|[]}
+                         */
+                        'string': function (str) {
+                            var arr = [],
+                                elm;
+                            elm = angular.element(str);
+
+                            if (elm.length) {
+                                arr.push(elm);
+                            }
+
+                            return arr;
+                        },
+                        /**
+                         *
+                         * @param elems
+                         * @returns {Array|[]}
+                         */
+                        convert: function (elems) {
+                            // Find the element type
+                            var elmType = factory.getElementsType(elems);
+                            // Convert the element to array
+                            return factory.convertElemsToArray[elmType](elems);
+                        }
+                    },
+                    /**
+                     *
+                     * @param selector {string} The selector string
+                     * @param element {*}
+                     * @returns {Array} array of node elements
+                     */
+                    find: function (selector, element) {
+                        // Set element as received or as html default
+                        element = element || html;
+                        var elementsArr = [];
+
+                        var arr = factory.convertElemsToArray.convert(element);
+
+                        // Iterate through the array
+                        arr.forEach(function (member) {
+                            // Parse onle Node elements
+                            if (factory.getElementsType(member) === 'Node') {
+                                // Find elements by selector on member
+                                var elements = member.querySelectorAll(selector);
+
+                                if (elements) {
+                                    // Turn elements into array
+                                    elements = Array.prototype.slice.call(elements);
+                                    // Push all elements in array to the returned array
+                                    elements.forEach(function (elem) {
+                                        elementsArr.push(elem);
+                                    });
+                                }
+                            }
+                        });
+
+                        return elementsArr
+                    },
+                    /**
+                     *
+                     * @param className {string}
+                     * @param elem
+                     */
+                    removeClass: function (className, elem) {
+                        var elems = factory.convertElemsToArray.convert(elem);
+                        elems.forEach(function (elem) {
+                            angular.element(elem).removeClass(className);
+                        });
+                    },
+                    /**
+                     *
+                     * @param className {string}
+                     * @param elem
+                     */
+                    addClass: function (className, elem) {
+                        var elems = factory.convertElemsToArray.convert(elem);
+                        elems.forEach(function (elem) {
+                            angular.element(elem).addClass(className);
+                        })
+                    }
+
+                };
+
+                return factory;
+            }
+        );
+
+    }());
 // Source: app/scripts/services/logger.js
 /**
  * @ngdoc service
@@ -263,7 +463,8 @@ angular.module('angularPeeker')
                 '$compile',
                 'config',
                 'logger',
-                function ($rootScope, $window, $compile, config, logger) {
+                'domActions',
+                function ($rootScope, $window, $compile, config, logger, domActions) {
 
                     //===============================
                     //      Private variables       =
@@ -304,7 +505,20 @@ angular.module('angularPeeker')
                         return remover;
                     };
 
+                    var removeElementHoveredClass = function () {
+                        var elements = domActions.find('.angularpeeker_elementHovered');
+                        domActions.removeClass('angularpeeker_elementHovered', elements);
+                    };
+
                     var activateSelector = function () {
+                        // Set class angularpeeker_peekerActivated if html does not have that class
+                        if (html.className.indexOf('angularpeeker_peekerActivated') === -1) {
+                            angular.element(html).addClass('angularpeeker_peekerActivated');
+                        }
+
+                        // remove all angularpeeker_elementHovered classes from dom
+                        removeElementHoveredClass();
+
                         mouseOverListenerRemover = on({
                             eventType: 'mouseover',
                             handler: function (evt) {
@@ -331,6 +545,8 @@ angular.module('angularPeeker')
                             capturePahse: true
                         });
 
+                        $rootScope.$broadcast('angularpeeker:peeker:selectoractivated');
+
                     };
 
                     var deactivateSelector = function () {
@@ -338,6 +554,8 @@ angular.module('angularPeeker')
                         mouseOutListenerRemover();
                         clickListenerRemover();
                         angular.element(html).removeClass('angularpeeker_peekerActivated');
+
+                        $rootScope.$broadcast('angularpeeker:peeker:selectordeactivated');
                     };
 
                     var toggleSelector = function () {
@@ -366,12 +584,8 @@ angular.module('angularPeeker')
                         $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
 
 
-                        //remove all angularpeeker_elementHovered classes
-                        var elems = document.getElementsByClassName('angularpeeker_elementHovered');
-                        elems = Array.prototype.slice.call(elems);
-                        elems.forEach(function (elem) {
-                            angular.element(elem).removeClass('angularpeeker_elementHovered');
-                        });
+                        // remove all angularpeeker_elementHovered classes from dom
+                        removeElementHoveredClass();
 
                         removeEventListeners();
 
@@ -397,7 +611,7 @@ angular.module('angularPeeker')
                         var watcher = $compile('<scope-viewer></scope-viewer>')(newScope);
                         angular.element(body).append(watcher);
 
-                        $rootScope.$broadcast('angularpeeker:peeker:scopevieweractive');
+                        $rootScope.$broadcast('angularpeeker:peeker:scopevieweractivated');
 
                     };
 
@@ -422,6 +636,14 @@ angular.module('angularPeeker')
                             toggleActive();
                         }
                     }, false);
+
+
+                    //===========================
+                    //      Listeners           =
+                    //===========================
+                    $rootScope.$on('angularpeeker:peekerstrip:requestselectoractivate', function () {
+                        activateSelector();
+                    });
 
                     return new Peeker();
                 }];
@@ -693,6 +915,12 @@ angular.module('angularPeeker')
                 'ng-class="{disabled: !scopeViewerActive}"' +
                 'ng-click="toggleShowHideState()"' +
                 '>Hide</div>' +
+                '<div ' +
+                'id="Select" ' +
+                'class="button live_gradient_yellow"' +
+                'ng-class="{disabled: selectorActive}"' +
+                'ng-click="activateSelector($event)"' +
+                '>Select</div>' +
                 '</div>' +
                 '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
