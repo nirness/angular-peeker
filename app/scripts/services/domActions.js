@@ -57,7 +57,7 @@
                      * @returns {Array|[]}
                      */
                     'Node': function (elem) {
-                        return [elem]
+                        return [elem];
                     },
                     /**
                      *
@@ -134,7 +134,7 @@
                         }
                     });
 
-                    return elementsArr
+                    return elementsArr;
                 },
                 /**
                  *
@@ -156,7 +156,7 @@
                     var elems = factory.convertElemsToArray.convert(elem);
                     elems.forEach(function (elem) {
                         angular.element(elem).addClass(className);
-                    })
+                    });
                 }
 
             };
