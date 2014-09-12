@@ -169,81 +169,80 @@ angular.module('angularPeeker')
 
 
 // Source: app/scripts/services/config.js
+(function () {
 /**
- * @ngdoc service
- * @name angularPeeker.config
- * @description
- * # config
- * Value in the angularPeeker.
- */
-angular.module('angularPeeker')
-    .provider('config', [
-        function () {
-            var peekerHotKey = {
-                key: 'p',
-                altKey: true,
-                shiftKey: false,
-                ctrlKey: true
-            };
+     * @ngdoc service
+     * @name angularPeeker.config
+     * @description
+     * # config
+     * Value in the angularPeeker.
+     */
+    angular.module('angularPeeker')
+        .provider('config', [
+            function () {
+                var peekerHotKey = {
+                        key: 'p',
+                        altKey: true,
+                        shiftKey: false,
+                        ctrlKey: true
+                    },
+                    queryDepth = 5;
 
-            var queryDepth = 5;
-
-            // Public API for configuration
-            this.setActivationKey = function (key) {
-                peekerHotKey.key = key;
-            };
-            this.setActivationKeyAlt = function (alt) {
-                peekerHotKey.altKey = alt;
-            };
-            this.setActivationKeyCtrl = function (ctrl) {
-                peekerHotKey.ctrlKey = ctrl;
-            };
-            this.setActivationKeyShift = function (shift) {
-                peekerHotKey.shiftKey = shift;
-            };
-            this.setActivationConfiguration = function (configObj) {
-                for (var key in configObj) {
-                    if (configObj.hasOwnProperty(key)) {
-                        peekerHotKey[key] = configObj[key];
-                    }
-                }
-            };
-
-            this.getQueryDepth = function () {
-                return queryDepth;
-            };
-
-            this.setQueryDepth = function (val) {
-                queryDepth = val;
-                return queryDepth;
-            };
-
-            this.$get = function () {
-                return {
-                    peekerHotKey: peekerHotKey,
-                    queryDepth: queryDepth
+                // Public API for configuration
+                this.setActivationKey = function (key) {
+                    peekerHotKey.key = key;
                 };
-            };
-        }
-    ]);
+                this.setActivationKeyAlt = function (alt) {
+                    peekerHotKey.altKey = alt;
+                };
+                this.setActivationKeyCtrl = function (ctrl) {
+                    peekerHotKey.ctrlKey = ctrl;
+                };
+                this.setActivationKeyShift = function (shift) {
+                    peekerHotKey.shiftKey = shift;
+                };
+                this.setActivationConfiguration = function (configObj) {
+                    var key;
 
+                    for (key in configObj) {
+                        if (configObj.hasOwnProperty(key)) {
+                            peekerHotKey[key] = configObj[key];
+                        }
+                    }
+                };
+
+                this.getQueryDepth = function () {
+                    return queryDepth;
+                };
+
+                this.setQueryDepth = function (val) {
+                    queryDepth = val;
+                    return queryDepth;
+                };
+
+                this.$get = function () {
+                    return {
+                        peekerHotKey: peekerHotKey,
+                        queryDepth: queryDepth
+                    };
+                };
+            }
+        ]);
+}());
 // Source: app/scripts/services/domActions.js
-    (function () {
-        /**
-         * @ngdoc service
-         * @name angularPeeker.domActions
-         * @description
-         * # domActions
-         * factory in the angularPeeker.
-         */
-        angular.module('angularPeeker')
-            .factory('domActions', function () {
-                var html = document.getElementsByTagName('html')[0],
-                    body = document.getElementsByTagName('body')[0];
-
-
-                var factory = {
-
+(function () {
+/**
+     * @ngdoc service
+     * @name angularPeeker.domActions
+     * @description
+     * # domActions
+     * factory in the angularPeeker.
+     */
+    angular.module('angularPeeker')
+        .factory('domActions', function () {
+            var html = document.getElementsByTagName('html')[0],
+                body = document.getElementsByTagName('body')[0],
+                factory = {
                     /**
                      *
                      * @param elems
@@ -252,13 +251,17 @@ angular.module('angularPeeker')
                     getElementsType: function (elems) {
                         if (elems instanceof Array) {
                             return 'Array';
-                        } else if (elems instanceof NodeList || elems instanceof HTMLCollection) {
+                        }
+                        if (elems instanceof NodeList || elems instanceof HTMLCollection) {
                             return 'NodeList';
-                        } else if (elems instanceof Node) {
+                        }
+                        if (elems instanceof Node) {
                             return 'Node';
-                        } else if (elems.scope && elems.injector && elems.length !== undefined) {
+                        }
+                        if (elems.scope && elems.injector && elems.length !== undefined) {
                             return 'angular';
-                        } else if (typeof elems === 'string') {
+                        }
+                        if (typeof elems === 'string') {
                             return 'string';
                         }
                     },
@@ -285,7 +288,7 @@ angular.module('angularPeeker')
                          * @returns {Array|[]}
                          */
                         'Node': function (elem) {
-                            return [elem]
+                            return [elem];
                         },
                         /**
                          *
@@ -340,9 +343,8 @@ angular.module('angularPeeker')
                     find: function (selector, element) {
                         // Set element as received or as html default
                         element = element || html;
-                        var elementsArr = [];
-
-                        var arr = factory.convertElemsToArray.convert(element);
+                        var elementsArr = [],
+                            arr = factory.convertElemsToArray.convert(element);
 
                         // Iterate through the array
                         arr.forEach(function (member) {
@@ -362,7 +364,7 @@ angular.module('angularPeeker')
                             }
                         });
 
-                        return elementsArr
+                        return elementsArr;
                     },
                     /**
                      *
@@ -384,66 +386,66 @@ angular.module('angularPeeker')
                         var elems = factory.convertElemsToArray.convert(elem);
                         elems.forEach(function (elem) {
                             angular.element(elem).addClass(className);
-                        })
+                        });
                     }
 
                 };
 
-                return factory;
-            }
-        );
+            return factory;
+        });
 
-    }());
+}());
 // Source: app/scripts/services/logger.js
+(function () {
 /**
- * @ngdoc service
- * @name angularPeeker.logger
- * @description
- * # logger
- * Factory in the angularPeeker.
- */
-angular.module('angularPeeker')
-    .factory('logger', function () {
-        var config = {
-            basicInfo: {
-                background: '#FFFF66',
-                color: '000'
-            }
-        };
+     * @ngdoc service
+     * @name angularPeeker.logger
+     * @description
+     * # logger
+     * Factory in the angularPeeker.
+     */
+    angular.module('angularPeeker')
+        .factory('logger', function () {
+            var config = {
+                    basicInfo: {
+                        background: '#FFFF66',
+                        color: '000'
+                    }
+                },
 
-        var buildColorString = function (name) {
-            return 'background: ' + config[name].background + ';color: ' + config[name].color;
-        };
+                buildColorString = function (name) {
+                    return 'background: ' + config[name].background + ';color: ' + config[name].color;
+                },
 
-        var convertArgumentsToArray = function (args, sliceFrom) {
-            return Array.prototype.slice.call(args, sliceFrom);
-        };
+                onvertArgumentsToArray = function (args, sliceFrom) {
+                    return Array.prototype.slice.call(args, sliceFrom);
+                },
 
-        var logWColor = function (str, color) {
-            console.log(str, color);
-        };
+                logWColor = function (str, color) {
+                    console.log(str, color);
+                },
 
-        var cLogArr = function (args) {
-            args.forEach(function (arg) {
-                console.log(arg);
-            });
-        };
+                cLogArr = function (args) {
+                    args.forEach(function (arg) {
+                        console.log(arg);
+                    });
+                },
 
-        var api = {
-            basicInfo: function () {
-                var firstArg = '%c' + arguments[0];
-                logWColor(firstArg, buildColorString('basicInfo'));
-                var args = convertArgumentsToArray(arguments, 1);
-                cLogArr(args);
-            }
-        };
+                api = {
+                    basicInfo: function () {
+                        var firstArg = '%c' + arguments[0];
+                        logWColor(firstArg, buildColorString('basicInfo'));
+                        var args = convertArgumentsToArray(arguments, 1);
+                        cLogArr(args);
+                    }
+                };
 
-        // Public API here
-        return {
-            l: api.basicInfo
-        };
-    });
-
+            // Public API here
+            return {
+                l: api.basicInfo
+            };
+        });
+}());
 // Source: app/scripts/services/peeker.js
 /**
  * @ngdoc service
@@ -582,7 +584,6 @@ angular.module('angularPeeker')
 
                     var deactivatePeeker = function () {
                         $rootScope.$broadcast('angularpeeker:peeker:peekerdeactivated');
-
 
                         // remove all angularpeeker_elementHovered classes from dom
                         removeElementHoveredClass();
