@@ -3,18 +3,24 @@ angular.module('angularPeeker')
         '$templateCache',
         function ($templateCache) {
             // Create watcher template
-            var scopeViewerHtml = '<div class="angular_peeker_container">' +
-                '<div class="buttons_group">' +
-                '<button class="opacity_button" ng-click="toggleOpacity()" style="opacity: 1;">Opac</button>' +
-                '<button class="close_button" ng-click="deactivatePeeker()">x</button>' +
-                '<button class="toggleSelector_button" ng-click="toggleSelector()">o</button>' +
-                '</div>' +
-                '</div>';
+            var scopeViewerHtml = '<div class="angular_peeker_container"></div>';
 
             $templateCache.put('scopeViewer.html', scopeViewerHtml);
 
             //peeker strip
-            var peekerStrip = '<div class="angularpeeker peeker_strip underBottom">Angular-Peeker is active</div>';
+            var peekerStrip = '' +
+                '<div class="angularpeeker peeker_strip underBottom">' +
+                '<span class="header">Angular-Peeker</span>' +
+                '<div class="buttons_group">' +
+                '<div ' +
+                'id="toggle_scopeViewer" ' +
+                'class="button live_gradient_yellow"' +
+                'ng-bind="scopeViewerState"' +
+                'ng-class="{disabled: !scopeViewerActive}"' +
+                'ng-click="toggleShowHideState()"' +
+                '>Hide</div>' +
+                '</div>' +
+                '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
         }
     ]);
