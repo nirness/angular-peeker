@@ -19,6 +19,12 @@ angular.module('angularPeeker')
                 'ng-class="{disabled: !scopeViewerActive}"' +
                 'ng-click="toggleShowHideState()"' +
                 '>Hide</div>' +
+                '<div ' +
+                'id="Select" ' +
+                'class="button live_gradient_yellow"' +
+                'ng-class="{disabled: selectorActive}"' +
+                'ng-click="activateSelector($event)"' +
+                '>Select</div>' +
                 '</div>' +
                 '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
