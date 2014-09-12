@@ -136,24 +136,33 @@
 
                     return elementsArr
                 },
+                /**
+                 *
+                 * @param className {string}
+                 * @param elem
+                 */
                 removeClass: function (className, elem) {
                     var elems = factory.convertElemsToArray.convert(elem);
                     elems.forEach(function (elem) {
                         angular.element(elem).removeClass(className);
                     });
+                },
+                /**
+                 *
+                 * @param className {string}
+                 * @param elem
+                 */
+                addClass: function (className, elem) {
+                    var elems = factory.convertElemsToArray.convert(elem);
+                    elems.forEach(function (elem) {
+                        angular.element(elem).addClass(className);
+                    })
                 }
 
             };
 
             return factory;
-        });
+        }
+    );
 
-    // remove all angularpeeker_elementHovered classes from dom
-    //var elements = html.querySelectorAll('.angularpeeker_elementHovered');
-    //if (elements) {
-    //    elements = Array.prototype.slice.call(elements);
-    //    elements.forEach(function (ele) {
-    //        angular.element(ele).removeClass('angularpeeker_elementHovered');
-    //    });
-    //}
 }());
