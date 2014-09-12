@@ -24,14 +24,14 @@
                 getElementsType: function (elems) {
                     if (elems instanceof Array) {
                         return 'Array';
-                    } else if (elems instanceof NodeList) {
-                        return 'NodeList'
+                    } else if (elems instanceof NodeList || elems instanceof HTMLCollection) {
+                        return 'NodeList';
                     } else if (elems instanceof Node) {
-                        return 'Node'
+                        return 'Node';
                     } else if (elems.scope && elems.injector && elems.length !== undefined) {
-                        return 'angular'
+                        return 'angular';
                     } else if (typeof elems === 'string') {
-                        return 'string'
+                        return 'string';
                     }
                 },
                 convertElemsToArray: {
@@ -90,6 +90,17 @@
                         }
 
                         return arr;
+                    },
+                    /**
+                     *
+                     * @param elems
+                     * @returns {Array|[]}
+                     */
+                    convert: function (elems) {
+                        // Find the element type
+                        var elmType = factory.getElementsType(elems);
+                        // Convert the element to array
+                        return factory.convertElemsToArray[elmType](elems);
                     }
                 },
                 /**
@@ -103,10 +114,7 @@
                     element = element || html;
                     var elementsArr = [];
 
-                    // Find the element type
-                    var elmType = factory.getElementsType(element);
-                    // Convert the element to array
-                    var arr = factory.convertElemsToArray[elmType](element);
+                    var arr = factory.convertElemsToArray.convert(element);
 
                     // Iterate through the array
                     arr.forEach(function (member) {
@@ -127,7 +135,14 @@
                     });
 
                     return elementsArr
+                },
+                removeClass: function (className, elem) {
+                    var elems = factory.convertElemsToArray.convert(elem);
+                    elems.forEach(function (elem) {
+                        angular.element(elem).removeClass(className);
+                    });
                 }
+
             };
 
             return factory;
