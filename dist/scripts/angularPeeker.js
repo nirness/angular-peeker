@@ -16,18 +16,38 @@ angular.module('angularPeeker', []);
 // Source: app/scripts/directives/peekerStrip.js
 angular.module('angularPeeker')
     .directive('peekerStrip', [
+        '$rootScope',
         '$timeout',
-        function ($timeout) {
+        function ($rootScope, $timeout) {
             return {
                 restrict: 'E',
                 templateUrl: 'peeker-strip.html',
                 controller: function ($scope, $element, $attrs) {
+                    // Init
+                    $scope.scopeViewerState = 'Hide';
+                    $scope.scopeViewerActive = false;
+
+                    $scope.toggleShowHideText = function () {
+                        $scope.scopeViewerState = $scope.scopeViewerState === 'Hide' ? 'Show' : 'Hide';
+                    };
+
+                    $scope.toggleShowHideState = function () {
+                        $rootScope.$broadcast('angularpeeker:peekerstrip:requesttogglestate', $scope.scopeViewerState);
+                        $scope.toggleShowHideText();
+                    };
+
                     $scope.removeStrip = function () {
                         angular.element($element[0].querySelector('.peeker_strip')).addClass('underBottom').removeClass('bottom');
                         $timeout(function () {
                             $element.remove();
                         }, 1200);
                     };
+
+
+                    //Setup scope listeners
+                    $scope.$on('angularpeeker:peeker:scopevieweractive', function () {
+                        $scope.scopeViewerActive = true;
+                    });
 
                     $scope.$on('angularpeeker:peeker:peekerdeactivated', function () {
                         $scope.removeStrip();
@@ -37,6 +57,7 @@ angular.module('angularPeeker')
                     setTimeout(function () {
                         angular.element(element[0].querySelector('.peeker_strip')).addClass('bottom').removeClass('underBottom');
                     }, 200);
+
                 }
             };
         }]);
@@ -46,7 +67,7 @@ angular.module('angularPeeker')
     .directive('scopeViewer', [
         'scopeViewBuilder',
         function (scopeViewBuilder) {
-            var doc;
+            var viewer;
 
 
             return {
@@ -56,12 +77,51 @@ angular.module('angularPeeker')
 
                 },
                 link: function (scope, element) {
-                    var link = scopeViewBuilder.createDisplayModel(
-                        scope.selectedScope,
-                        null,
-                        'selectedScope');
-                    doc = link(scope);
-                    element[0].querySelector('.angular_peeker_container').appendChild(doc[0]);
+
+
+                    // scope methods
+                    //==============
+                    scope.killViewer = function () {
+                        element[0].querySelector('.angular_peeker_container').removeChild(viewer[0]);
+                        viewer = null;
+                    };
+
+                    scope.appendViewer = function () {
+                        element[0].querySelector('.angular_peeker_container').appendChild(viewer[0]);
+                    };
+
+                    scope.hideElement = function () {
+                        element[0].style.display = 'none';
+                    };
+
+                    scope.showElement = function () {
+                        element[0].attributes.removeNamedItem('style');
+                    };
+
+
+                    // Init
+                    //=======
+
+                    // Build the scope view and get a link function
+                    var link = scopeViewBuilder.buildScopeView(
+                        scope.selectedScope, // The selected scope
+                        null, // No original doc
+                        'selectedScope' // The name of the original property
+                    );
+                    // Run the link function
+                    viewer = link(scope);
+                    // Append the result document to angular_peeker_container
+                    scope.appendViewer();
+
+
+                    // Set scope listeners
+                    scope.$on('angularpeeker:peekerstrip:requesttogglestate', function (evt, data) {
+                        if (data.toLowerCase() === 'hide') {
+                            scope.hideElement();
+                        } else {
+                            scope.showElement();
+                        }
+                    });
                 }
             };
         }]);
@@ -330,7 +390,6 @@ angular.module('angularPeeker')
 
 
                     var displayScope = function (evt) {
-                        debugger;
                         var newScope = $rootScope.$new(true);
                         newScope.selectedScope = getScope(evt.srcElement);
                         newScope.selectedElement = angular.element(evt.srcElement);
@@ -338,6 +397,7 @@ angular.module('angularPeeker')
                         var watcher = $compile('<scope-viewer></scope-viewer>')(newScope);
                         angular.element(body).append(watcher);
 
+                        $rootScope.$broadcast('angularpeeker:peeker:scopevieweractive');
 
                     };
 
@@ -371,9 +431,9 @@ angular.module('angularPeeker')
 (function () {
 /**
      * @ngdoc service
- * @name angularPeeker.scopeViewBuilder
+     * @name angularPeeker.scopeViewBuilder
      * @description
- * # scopeViewBuilder
+     * # scopeViewBuilder
      * Provider in the angularPeeker.
      */
     angular.module('angularPeeker')
@@ -516,7 +576,7 @@ angular.module('angularPeeker')
                             var key;
                             for (key in obj) {
                                 if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
-                                    scopeViewBuilder.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
+                                    ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
                                 }
                             }
                         },
@@ -531,7 +591,7 @@ angular.module('angularPeeker')
                             displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
                             arr.forEach(function (item, index) {
-                                scopeViewBuilder.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
+                                ScopeViewBuilder.prototype.buildScopeView(item, wrapper, path + '[' + index + ']', depth);
                             });
 
                         },
@@ -574,11 +634,11 @@ angular.module('angularPeeker')
                     //===========================
                     //      Private Constructor =
                     //===========================
-                    var scopeViewBuilder = function () {
+                    var ScopeViewBuilder = function () {
                     };
 
 
-                    scopeViewBuilder.prototype.createDisplayModel = function (model, doc, path, depth) {
+                    ScopeViewBuilder.prototype.buildScopeView = function (model, doc, path, depth) {
                         // Create doc if it wasn't passed
                         doc = (doc) ? doc : createObjDivWrapper();
                         // Set the depth
@@ -606,7 +666,7 @@ angular.module('angularPeeker')
 
                     };
 
-                    return new scopeViewBuilder();
+                    return new ScopeViewBuilder();
                 }
             ];
         });
@@ -617,18 +677,24 @@ angular.module('angularPeeker')
         '$templateCache',
         function ($templateCache) {
             // Create watcher template
-            var scopeViewerHtml = '<div class="angular_peeker_container">' +
-                '<div class="buttons_group">' +
-                '<button class="opacity_button" ng-click="toggleOpacity()" style="opacity: 1;">Opac</button>' +
-                '<button class="close_button" ng-click="deactivatePeeker()">x</button>' +
-                '<button class="toggleSelector_button" ng-click="toggleSelector()">o</button>' +
-                '</div>' +
-                '</div>';
+            var scopeViewerHtml = '<div class="angular_peeker_container"></div>';
 
             $templateCache.put('scopeViewer.html', scopeViewerHtml);
 
             //peeker strip
-            var peekerStrip = '<div class="angularpeeker peeker_strip underBottom">Angular-Peeker is active</div>';
+            var peekerStrip = '' +
+                '<div class="angularpeeker peeker_strip underBottom">' +
+                '<span class="header">Angular-Peeker</span>' +
+                '<div class="buttons_group">' +
+                '<div ' +
+                'id="toggle_scopeViewer" ' +
+                'class="button live_gradient_yellow"' +
+                'ng-bind="scopeViewerState"' +
+                'ng-class="{disabled: !scopeViewerActive}"' +
+                'ng-click="toggleShowHideState()"' +
+                '>Hide</div>' +
+                '</div>' +
+                '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
         }
     ]);
