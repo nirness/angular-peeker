@@ -13,6 +13,36 @@
 angular.module('angularPeeker', []);
 
 
+// Source: app/scripts/directives/methodviewer.js
+    (function () {
+        /**
+         * @ngdoc directive
+         * @name angularPeeker.directive:methodViewer
+         * @description
+         * # methodViewer
+         */
+        angular.module('angularPeeker')
+            .directive('methodViewer', [
+                'domActions',
+                function (domActions) {
+                    return {
+                        templateUrl: 'method-viewer.html',
+                        restrict: 'E',
+                        scope: {
+                            methodName: '=',
+                            selectedScope: '='
+                        },
+                        link: function postLink (scope, element, attrs) {
+                            var div = domActions.find('.method_content', element)[0];
+                            div.innerHTML = '<pre>' + (scope.selectedScope[scope.methodName] || null).toString() + '</pre>';
+
+                            scope.remove = function () {
+                                element.remove();
+                            };
+                        }
+                    };
+                }]);
+    }());
 // Source: app/scripts/directives/peekerStrip.js
 angular.module('angularPeeker')
     .directive('peekerStrip', [
@@ -88,20 +118,34 @@ angular.module('angularPeeker')
         }]);
 
 // Source: app/scripts/directives/scopeViewer.js
+    (function () {
 angular.module('angularPeeker')
     .directive('scopeViewer', [
         'scopeViewBuilder',
-        function (scopeViewBuilder) {
+        'methodInvoker',
+        '$compile',
+        function (scopeViewBuilder, methodInvoker, $compile) {
             var viewer;
-
 
             return {
                 restrict: 'E',
                 templateUrl: 'scopeViewer.html',
                 controller: function ($scope, $element, $attrs) {
+                    // $scope methods
+                    //===============
+                    $scope.invokeMethod = function (methodName) {
+                        methodInvoker.invoke($scope.selectedScope, methodName);
+                    };
+
+                    $scope.viewMethod = function (name) {
+                        var view = '<method-viewer method-name="\'' + name +
+                            '\'" selected-scope="selectedScope"></method-viewer>';
+                        var dom = $compile(view)($scope);
+                        document.body.appendChild(dom[0]);
+                    };
 
                     // Cleanup
-                    $element.on('$destroy', function (evt) {
+                    $element.on('$destroy', function () {
                         $scope = null;
                     });
                 },
@@ -158,7 +202,7 @@ angular.module('angularPeeker')
                 }
             };
         }]);
-
+    }());
 // Source: app/scripts/run.js
 angular.module('angularPeeker')
     .run([
@@ -446,6 +490,26 @@ angular.module('angularPeeker')
             };
         });
 }());
+// Source: app/scripts/services/methodinvoker.js
+    (function () {
+        /**
+         * @ngdoc service
+         * @name angularPeeker.methodInvoker
+         * @description
+         * # methodInvoker
+         * Factory in the angularPeeker.
+         */
+        angular.module('angularPeeker')
+            .factory('methodInvoker', function () {
+                var factory = {
+                    invoke: function (scope, methodName) {
+                        scope[methodName]();
+                    }
+                };
+
+                return factory;
+            });
+    }());
 // Source: app/scripts/services/peeker.js
 /**
  * @ngdoc service
@@ -679,7 +743,6 @@ angular.module('angularPeeker')
                         }
 
                             return '';
-
                         },
 
                         createElementWrapper = function (elType, className) {
@@ -789,16 +852,17 @@ angular.module('angularPeeker')
                                 displayModelActions.setIndentClass(label, depth);
                             },
                             'object': function (obj, doc, path, depth) {
-                                var name = displayModelActions.baseName(path);
+                                var name, wrapper, key;
+
+                                name = displayModelActions.baseName(path);
                                 if (name === false) {
                                     return;
                                 }
-                                var wrapper = createObjDivWrapper();
+                                wrapper = createObjDivWrapper();
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
-                                var key;
                                 for (key in obj) {
-                                    if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
+                                    if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent' && key !== '$root') {
                                         ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
                                     }
                                 }
@@ -827,6 +891,22 @@ angular.module('angularPeeker')
 
                                 var wrapper = createFunctionDivWrapper();
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+
+                                // Add an input and an invoke button
+                                var inp = createElementWrapper('input', 'angularpeeker function_elements for_' + name);
+                                wrapper.appendChild(inp);
+
+                                var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
+                                invokeButton.innerHTML = 'Call';
+                                angular.element(invokeButton).attr('ng-click', 'invokeMethod(\'' + name + '\')');
+                                wrapper.appendChild(invokeButton);
+
+                                var viewMethodButton = createElementWrapper('div', 'button view_function live_gradient_yellow');
+                                viewMethodButton.innerHTML = 'View';
+                                angular.element(viewMethodButton).attr('ng-click', 'viewMethod(\'' + name + '\')');
+                                wrapper.appendChild(viewMethodButton);
+
+
                             },
                             'primitive': function (doc, path, type, depth) {
                                 // Get The name
@@ -863,7 +943,7 @@ angular.module('angularPeeker')
 
                     ScopeViewBuilder.prototype.buildScopeView = function (model, doc, path, depth) {
                         // Create doc if it wasn't passed
-                        doc = (doc) ? doc : createObjDivWrapper();
+                        doc = doc || createObjDivWrapper();
                         // Set the depth
                         depth = (depth !== undefined && depth !== null) ? depth : 0;
 
@@ -925,6 +1005,12 @@ angular.module('angularPeeker')
                 '</div>' +
                 '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
+
+            var methodViewerHtml = '<div class="angularpeeker method_viewer">' +
+                '<div class="method_content"></div> ' +
+                '<div class="button" ng-click="remove()">Close</div>' +
+                '</div>';
+            $templateCache.put('method-viewer.html', methodViewerHtml);
         }
     ]);
 
