@@ -145,12 +145,12 @@ angular.module('angularPeeker')
 
 
                     var displayScope = function (evt) {
-
+                        debugger;
                         var newScope = $rootScope.$new(true);
                         newScope.selectedScope = getScope(evt.srcElement);
                         newScope.selectedElement = angular.element(evt.srcElement);
 
-                        var watcher = $compile('<watcher></watcher>')(newScope);
+                        var watcher = $compile('<scope-viewer></scope-viewer>')(newScope);
                         angular.element(body).append(watcher);
 
 

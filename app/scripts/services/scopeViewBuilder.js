@@ -3,13 +3,13 @@
 
     /**
      * @ngdoc service
-     * @name angularPeeker.ScopeShow
+     * @name angularPeeker.scopeViewBuilder
      * @description
-     * # ScopeShow
+     * # scopeViewBuilder
      * Provider in the angularPeeker.
      */
     angular.module('angularPeeker')
-        .provider('ScopeShow', function () {
+        .provider('scopeViewBuilder', function () {
 
             // Method for instantiating
             this.$get = [
@@ -148,7 +148,7 @@
                             var key;
                             for (key in obj) {
                                 if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
-                                    ScopeShow.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
+                                    scopeViewBuilder.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
                                 }
                             }
                         },
@@ -163,7 +163,7 @@
                             displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
                             arr.forEach(function (item, index) {
-                                ScopeShow.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
+                                scopeViewBuilder.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
                             });
 
                         },
@@ -206,11 +206,11 @@
                     //===========================
                     //      Private Constructor =
                     //===========================
-                    var ScopeShow = function () {
+                    var scopeViewBuilder = function () {
                     };
 
 
-                    ScopeShow.prototype.createDisplayModel = function (model, doc, path, depth) {
+                    scopeViewBuilder.prototype.createDisplayModel = function (model, doc, path, depth) {
                         // Create doc if it wasn't passed
                         doc = (doc) ? doc : createObjDivWrapper();
                         // Set the depth
@@ -238,7 +238,7 @@
 
                     };
 
-                    return new ScopeShow();
+                    return new scopeViewBuilder();
                 }
             ];
         });

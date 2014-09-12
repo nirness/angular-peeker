@@ -41,28 +41,22 @@ angular.module('angularPeeker')
             };
         }]);
 
-// Source: app/scripts/directives/watcher.js
+// Source: app/scripts/directives/scopeViewer.js
 angular.module('angularPeeker')
-    .directive('watcher', [
-        'ScopeShow',
-        function (ScopeShow) {
+    .directive('scopeViewer', [
+        'scopeViewBuilder',
+        function (scopeViewBuilder) {
             var doc;
 
 
             return {
                 restrict: 'E',
-                templateUrl: 'watcher.html',
+                templateUrl: 'scopeViewer.html',
                 controller: function ($scope, $element, $attrs) {
-                    $scope.toggleShow = function () {
-                        if ($element[0].style.opacity === '1') {
-                            $element[0].style.opacity = '0.1';
-                        } else {
-                            $element[0].style.opacity = '1';
-                        }
-                    };
+
                 },
                 link: function (scope, element) {
-                    var link = ScopeShow.createDisplayModel(
+                    var link = scopeViewBuilder.createDisplayModel(
                         scope.selectedScope,
                         null,
                         'selectedScope');
@@ -336,12 +330,12 @@ angular.module('angularPeeker')
 
 
                     var displayScope = function (evt) {
-
+                        debugger;
                         var newScope = $rootScope.$new(true);
                         newScope.selectedScope = getScope(evt.srcElement);
                         newScope.selectedElement = angular.element(evt.srcElement);
 
-                        var watcher = $compile('<watcher></watcher>')(newScope);
+                        var watcher = $compile('<scope-viewer></scope-viewer>')(newScope);
                         angular.element(body).append(watcher);
 
 
@@ -373,17 +367,17 @@ angular.module('angularPeeker')
                 }];
         }]);
 
-// Source: app/scripts/services/scopeShow.js
+// Source: app/scripts/services/scopeViewBuilder.js
 (function () {
 /**
      * @ngdoc service
-     * @name angularPeeker.ScopeShow
+ * @name angularPeeker.scopeViewBuilder
      * @description
-     * # ScopeShow
+ * # scopeViewBuilder
      * Provider in the angularPeeker.
      */
     angular.module('angularPeeker')
-        .provider('ScopeShow', function () {
+        .provider('scopeViewBuilder', function () {
 
             // Method for instantiating
             this.$get = [
@@ -522,7 +516,7 @@ angular.module('angularPeeker')
                             var key;
                             for (key in obj) {
                                 if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
-                                    ScopeShow.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
+                                    scopeViewBuilder.prototype.createDisplayModel(obj[key], wrapper, path + '.' + key, depth);
                                 }
                             }
                         },
@@ -537,7 +531,7 @@ angular.module('angularPeeker')
                             displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
                             arr.forEach(function (item, index) {
-                                ScopeShow.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
+                                scopeViewBuilder.prototype.createDisplayModel(item, wrapper, path + '[' + index + ']', depth);
                             });
 
                         },
@@ -580,11 +574,11 @@ angular.module('angularPeeker')
                     //===========================
                     //      Private Constructor =
                     //===========================
-                    var ScopeShow = function () {
+                    var scopeViewBuilder = function () {
                     };
 
 
-                    ScopeShow.prototype.createDisplayModel = function (model, doc, path, depth) {
+                    scopeViewBuilder.prototype.createDisplayModel = function (model, doc, path, depth) {
                         // Create doc if it wasn't passed
                         doc = (doc) ? doc : createObjDivWrapper();
                         // Set the depth
@@ -612,7 +606,7 @@ angular.module('angularPeeker')
 
                     };
 
-                    return new ScopeShow();
+                    return new scopeViewBuilder();
                 }
             ];
         });
@@ -623,7 +617,7 @@ angular.module('angularPeeker')
         '$templateCache',
         function ($templateCache) {
             // Create watcher template
-            var watcherHtml = '<div class="angular_peeker_container">' +
+            var scopeViewerHtml = '<div class="angular_peeker_container">' +
                 '<div class="buttons_group">' +
                 '<button class="opacity_button" ng-click="toggleOpacity()" style="opacity: 1;">Opac</button>' +
                 '<button class="close_button" ng-click="deactivatePeeker()">x</button>' +
@@ -631,7 +625,7 @@ angular.module('angularPeeker')
                 '</div>' +
                 '</div>';
 
-            $templateCache.put('watcher.html', watcherHtml);
+            $templateCache.put('scopeViewer.html', scopeViewerHtml);
 
             //peeker strip
             var peekerStrip = '<div class="angularpeeker peeker_strip underBottom">Angular-Peeker is active</div>';
