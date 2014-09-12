@@ -3,7 +3,7 @@
 describe('Service: peeker', function () {
 
     // load the service's module
-    beforeEach(module('angularPeekerApp'));
+    beforeEach(module('angularPeeker'));
 
     // instantiate service
     var peeker;
