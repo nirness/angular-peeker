@@ -522,7 +522,7 @@ angular.module('angularPeeker')
                             for (i = 0; i < str.length; i += 1) {
                                 // If the char equals the delimiter then push the builtString and set it to empty string
                                 if (!ignore && str[i] === delimiter) {
-                                    arr.push(builtString);
+                                    arr.push(builtString.trim());
                                     builtString = '';
                                 } else {
                                     // add the char to the builtString
@@ -547,8 +547,8 @@ angular.module('angularPeeker')
                                 }
                             }
                             // push the final builtString into the arr
-                            if (builtString.length > 0) {
-                                arr.push(builtString);
+                            if (builtString.trim().length > 0) {
+                                arr.push(builtString.trim());
                             }
                             return arr;
                         } else {
@@ -578,13 +578,10 @@ angular.module('angularPeeker')
                                     eval('endVal = ' + value);
                                 } catch (e) {
                                     console.warn('domActions: JSONParse: eval phase: failed.', e);
-                                } finally {
-                                    return endVal;
                                 }
-                            } else {
-                                return endVal;
                             }
                         }
+                        return endVal;
                     },
                     getTypedParam: function (scope, paramName) {
                         //validate paramName
@@ -640,8 +637,7 @@ angular.module('angularPeeker')
                     },
                     getThis: function (scope, methodName) {
                         var thatString = factory.findRelevantThisInputField(methodName).value;
-                        var that = factory.getTypedParam(scope, thatString) || this;
-                        return that;
+                        return factory.getTypedParam(scope, thatString) || this;
                     },
                     invoke: function (scope, methodName) {
                         var args = factory.getParams(scope, methodName);
