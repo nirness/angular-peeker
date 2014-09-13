@@ -5,6 +5,11 @@ angular.module('angularPeekerTest')
             $scope.sayHello = function () {
                 alert('Hello');
             };
+
+            $scope.saySomething = function (someString) {
+                alert(someString);
+            };
+
             $scope.englishLeague = {
                 teams: [
                     {
