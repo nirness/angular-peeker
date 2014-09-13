@@ -500,15 +500,71 @@ angular.module('angularPeeker')
          * Factory in the angularPeeker.
          */
         angular.module('angularPeeker')
-            .factory('methodInvoker', function () {
+            .factory('methodInvoker', [
+                'domActions',
+                function (domActions) {
                 var factory = {
+                    findRelevantThisInputField: function (methodName) {
+                        return domActions.find('input.angularpeeker.function_elements.this_field.for_' + methodName)[0];
+                    },
+                    findRelevantParamsInputField: function (methodName) {
+                        return domActions.find('input.angularpeeker.function_elements.params_field.for_' + methodName)[0];
+                    },
+                    getTypedParam: function (scope, paramName) {
+                        //validate paramName
+                        if (!paramName || paramName.length === 0) {
+                            return null;
+                        }
+
+                        var startsWith = paramName[0],
+                            endsWith = paramName[paramName.length - 1];
+
+                        // Find if its a string
+                        if ((startsWith === '\'' && endsWith === '\'') || (startsWith === '"' && endsWith === '"')) {
+                            return paramName.substr(1, paramName.length - 2);
+                        }
+
+                        // find if its a number
+                        if (parseFloat(paramName).toString() === paramName) {
+                            return parseFloat(paramName);
+                        }
+
+                        // find if its a variable name
+                        if (scope[paramName] !== undefined) {
+                            return scope[paramName];
+                        }
+
+                        return null;
+                    },
+                    getParams: function (scope, methodName) {
+                        var input = factory.findRelevantParamsInputField(methodName),
+                            paramsString = input.value,
+                            paramNames = paramsString.trim().split(','),
+                            args = [];
+
+                        paramNames.forEach(function (paramName) {
+                            args.push(factory.getTypedParam(scope, paramName.trim()));
+
+                        });
+
+                        return args;
+
+                    },
+                    getThis: function (scope, methodName) {
+                        var thatString = factory.findRelevantThisInputField(methodName).value;
+                        var that = factory.getTypedParam(scope, thatString) || this;
+                        return that;
+                    },
                     invoke: function (scope, methodName) {
-                        scope[methodName]();
+                        debugger;
+                        var args = factory.getParams(scope, methodName);
+                        var that = factory.getThis(scope, methodName);
+                        scope[methodName].apply(that, args);
                     }
                 };
 
                 return factory;
-            });
+                }]);
     }());
 // Source: app/scripts/services/peeker.js
 /**
@@ -892,9 +948,20 @@ angular.module('angularPeeker')
                                 var wrapper = createFunctionDivWrapper();
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
+                                var thisWrapper = createElementWrapper('div', 'angularpeeker function_elements this_field');
                                 // Add an input and an invoke button
-                                var inp = createElementWrapper('input', 'angularpeeker function_elements for_' + name);
-                                wrapper.appendChild(inp);
+                                var inpThisLabel = createLabelSpan('this');
+                                thisWrapper.appendChild(inpThisLabel);
+                                var inpThis = createElementWrapper('input', 'angularpeeker function_elements this_field for_' + name);
+                                thisWrapper.appendChild(inpThis);
+                                wrapper.appendChild(thisWrapper);
+
+                                var paramsWrapper = createElementWrapper('div', 'angularpeeker function_elements params_field');
+                                var inpParamsLabel = createLabelSpan('parameters');
+                                paramsWrapper.appendChild(inpParamsLabel);
+                                var inpParams = createElementWrapper('input', 'angularpeeker function_elements params_field for_' + name);
+                                paramsWrapper.appendChild(inpParams);
+                                wrapper.appendChild(paramsWrapper);
 
                                 var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
                                 invokeButton.innerHTML = 'Call';
