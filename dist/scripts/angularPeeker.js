@@ -13,6 +13,36 @@
 angular.module('angularPeeker', []);
 
 
+// Source: app/scripts/directives/methodviewer.js
+(function () {
+/**
+     * @ngdoc directive
+     * @name angularPeeker.directive:methodViewer
+     * @description
+     * # methodViewer
+     */
+    angular.module('angularPeeker')
+        .directive('methodViewer', [
+            'domActions',
+            function (domActions) {
+                return {
+                    templateUrl: 'method-viewer.html',
+                    restrict: 'E',
+                    scope: {
+                        methodName: '=',
+                        selectedScope: '='
+                    },
+                    link: function postLink (scope, element, attrs) {
+                        var div = domActions.find('.method_content', element)[0];
+                        div.innerHTML = '<pre>' + (scope.selectedScope[scope.methodName] || null).toString() + '</pre>';
+
+                        scope.remove = function () {
+                            element.remove();
+                        };
+                    }
+                };
+            }]);
+}());
 // Source: app/scripts/directives/peekerStrip.js
 angular.module('angularPeeker')
     .directive('peekerStrip', [
@@ -88,77 +118,91 @@ angular.module('angularPeeker')
         }]);
 
 // Source: app/scripts/directives/scopeViewer.js
+(function () {
 angular.module('angularPeeker')
-    .directive('scopeViewer', [
-        'scopeViewBuilder',
-        function (scopeViewBuilder) {
-            var viewer;
+        .directive('scopeViewer', [
+            'scopeViewBuilder',
+            'methodInvoker',
+            '$compile',
+            function (scopeViewBuilder, methodInvoker, $compile) {
+                var viewer;
+
+                return {
+                    restrict: 'E',
+                    templateUrl: 'scopeViewer.html',
+                    controller: function ($scope, $element, $attrs) {
+                        // $scope methods
+                        //===============
+                        $scope.invokeMethod = function (methodName) {
+                            methodInvoker.invoke($scope.selectedScope, methodName);
+                        };
+
+                        $scope.viewMethod = function (name) {
+                            var view = '<method-viewer method-name="\'' + name +
+                                '\'" selected-scope="selectedScope"></method-viewer>';
+                            var dom = $compile(view)($scope);
+                            document.body.appendChild(dom[0]);
+                        };
+
+                        // Cleanup
+                        $element.on('$destroy', function () {
+                            $scope = null;
+                        });
+                    },
+                    link: function (scope, element) {
 
 
-            return {
-                restrict: 'E',
-                templateUrl: 'scopeViewer.html',
-                controller: function ($scope, $element, $attrs) {
+                        // scope methods
+                        //==============
+                        scope.destroyViewer = function () {
+                            element.remove();
+                            viewer = null;
+                        };
 
-                    // Cleanup
-                    $element.on('$destroy', function (evt) {
-                        $scope = null;
-                    });
-                },
-                link: function (scope, element) {
+                        scope.appendViewer = function () {
+                            element[0].querySelector('.angular_peeker_container').appendChild(viewer[0]);
+                        };
 
+                        scope.hideElement = function () {
+                            element[0].style.display = 'none';
+                        };
 
-                    // scope methods
-                    //==============
-                    scope.destroyViewer = function () {
-                        element.remove();
-                        viewer = null;
-                    };
-
-                    scope.appendViewer = function () {
-                        element[0].querySelector('.angular_peeker_container').appendChild(viewer[0]);
-                    };
-
-                    scope.hideElement = function () {
-                        element[0].style.display = 'none';
-                    };
-
-                    scope.showElement = function () {
-                        element[0].attributes.removeNamedItem('style');
-                    };
+                        scope.showElement = function () {
+                            element[0].attributes.removeNamedItem('style');
+                        };
 
 
-                    // Init
-                    //=======
+                        // Init
+                        //=======
 
-                    // Build the scope view and get a link function
-                    var link = scopeViewBuilder.buildScopeView(
-                        scope.selectedScope, // The selected scope
-                        null, // No original doc
-                        'selectedScope' // The name of the original property
-                    );
-                    // Run the link function
-                    viewer = link(scope);
-                    // Append the result document to angular_peeker_container
-                    scope.appendViewer();
+                        // Build the scope view and get a link function
+                        var link = scopeViewBuilder.buildScopeView(
+                            scope.selectedScope, // The selected scope
+                            null, // No original doc
+                            'selectedScope' // The name of the original property
+                        );
+                        // Run the link function
+                        viewer = link(scope);
+                        // Append the result document to angular_peeker_container
+                        scope.appendViewer();
 
 
-                    // Set scope listeners
-                    scope.$on('angularpeeker:peekerstrip:requesttogglestate', function (evt, data) {
-                        if (data.toLowerCase() === 'hide') {
-                            scope.hideElement();
-                        } else {
-                            scope.showElement();
-                        }
-                    });
+                        // Set scope listeners
+                        scope.$on('angularpeeker:peekerstrip:requesttogglestate', function (evt, data) {
+                            if (data.toLowerCase() === 'hide') {
+                                scope.hideElement();
+                            } else {
+                                scope.showElement();
+                            }
+                        });
 
-                    scope.$on('angularpeeker:peekerstrip:requestdestroyviewer', function () {
-                        scope.destroyViewer();
-                    });
-                }
-            };
-        }]);
-
+                        scope.$on('angularpeeker:peekerstrip:requestdestroyviewer', function () {
+                            scope.destroyViewer();
+                        });
+                    }
+                };
+            }]);
+}());
 // Source: app/scripts/run.js
 angular.module('angularPeeker')
     .run([
@@ -446,6 +490,82 @@ angular.module('angularPeeker')
             };
         });
 }());
+// Source: app/scripts/services/methodinvoker.js
+(function () {
+/**
+     * @ngdoc service
+     * @name angularPeeker.methodInvoker
+     * @description
+     * # methodInvoker
+     * Factory in the angularPeeker.
+     */
+    angular.module('angularPeeker')
+        .factory('methodInvoker', [
+            'domActions',
+            function (domActions) {
+                var factory = {
+                    findRelevantThisInputField: function (methodName) {
+                        return domActions.find('input.angularpeeker.function_elements.this_field.for_' + methodName)[0];
+                    },
+                    findRelevantParamsInputField: function (methodName) {
+                        return domActions.find('input.angularpeeker.function_elements.params_field.for_' + methodName)[0];
+                    },
+                    getTypedParam: function (scope, paramName) {
+                        //validate paramName
+                        if (!paramName || paramName.length === 0) {
+                            return null;
+                        }
+
+                        var startsWith = paramName[0],
+                            endsWith = paramName[paramName.length - 1];
+
+                        // Find if its a string
+                        if ((startsWith === '\'' && endsWith === '\'') || (startsWith === '"' && endsWith === '"')) {
+                            return paramName.substr(1, paramName.length - 2);
+                        }
+
+                        // find if its a number
+                        if (parseFloat(paramName).toString() === paramName) {
+                            return parseFloat(paramName);
+                        }
+
+                        // find if its a variable name
+                        if (scope[paramName] !== undefined) {
+                            return scope[paramName];
+                        }
+
+                        return null;
+                    },
+                    getParams: function (scope, methodName) {
+                        var input = factory.findRelevantParamsInputField(methodName),
+                            paramsString = input.value,
+                            paramNames = paramsString.trim().split(','),
+                            args = [];
+
+                        paramNames.forEach(function (paramName) {
+                            args.push(factory.getTypedParam(scope, paramName.trim()));
+
+                        });
+
+                        return args;
+
+                    },
+                    getThis: function (scope, methodName) {
+                        var thatString = factory.findRelevantThisInputField(methodName).value;
+                        var that = factory.getTypedParam(scope, thatString) || this;
+                        return that;
+                    },
+                    invoke: function (scope, methodName) {
+                        debugger;
+                        var args = factory.getParams(scope, methodName);
+                        var that = factory.getThis(scope, methodName);
+                        scope[methodName].apply(that, args);
+                    }
+                };
+
+                return factory;
+            }]);
+}());
 // Source: app/scripts/services/peeker.js
 /**
  * @ngdoc service
@@ -660,239 +780,278 @@ angular.module('angularPeeker')
      * Provider in the angularPeeker.
      */
     angular.module('angularPeeker')
-        .provider('scopeViewBuilder', function () {
+        .provider('scopeViewBuilder', [
+            function (domActions) {
 
-            // Method for instantiating
-            this.$get = [
-                'config',
-                '$compile',
-                function (config, $compile) {
+                // Method for instantiating
+                this.$get = [
+                    'config',
+                    '$compile',
+                    'domActions',
+                    function (config, $compile, domActions) {
 
 
-                    //===========================
-                    //      Private Methods     =
-                    //===========================
-                    var getNameFromPath = function (path) {
-                        var names = path.split('.');
-                        if (names) {
-                            return names[names.length - 1];
-                        }
-
-                            return '';
-
-                        },
-
-                        createElementWrapper = function (elType, className) {
-                            var wrapper = document.createElement(elType);
-                            wrapper.className = className;
-                            return wrapper;
-                        },
-
-                        createLabelSpan = function (text) {
-                            var label = createElementWrapper('span', 'angularpeeker label_wrapper');
-                            label.innerHTML = text;
-                            return label;
-                        },
-
-                        createObjDivWrapper = function () {
-                            return createElementWrapper('div', 'angularpeeker object_div_wrapper');
-                        },
-
-                        createArrayDivWrapper = function () {
-                            return createElementWrapper('div', 'angularpeeker array_div_wrapper');
-                        },
-
-                        createFunctionDivWrapper = function () {
-                            return createElementWrapper('div', 'angularpeeker function_div_wrapper');
-                        },
-
-                        createPrimitiveWrapper = function (path, type) {
-                            var inp = createElementWrapper('input', 'angularpeeker primitive_wrapper ' + type);
-                            angular.element(inp).attr('ng-model', path);
-                            return inp;
-                        },
-
-                        typeDetector = [
-                            {
-                                type: 'string',
-                                checkMethod: function (val) {
-                                    return angular.isString(val);
+                        //===========================
+                        //      Private Methods     =
+                        //===========================
+                        var getNameFromPath = function (path) {
+                                var names = path.split('.');
+                                if (names) {
+                                    return names[names.length - 1];
                                 }
+
+                                return '';
                             },
-                            {
-                                type: 'number',
-                                checkMethod: function (val) {
-                                    return angular.isNumber(val);
-                                }
-                            },
-                            {
-                                type: 'boolean',
-                                checkMethod: function (val) {
-                                    return (val === true || val === false);
-                                }
-                            },
-                            {
-                                type: 'array',
-                                checkMethod: function (val) {
-                                    return angular.isArray(val);
-                                }
-                            },
-                            {
-                                type: 'function',
-                                checkMethod: function (val) {
-                                    return angular.isFunction(val);
-                                }
-                            },
-                            {
-                                type: 'object',
-                                checkMethod: function (val) {
-                                    return angular.isObject(val);
-                                }
-                            },
-                            {
-                                type: 'null',
-                                checkMethod: function (val) {
-                                    return val === null;
-                                }
-                            }
-                        ],
 
-                        getType = function (val) {
-                            var i;
-                            for (i = 0; i < typeDetector.length; i += 1) {
-                                if (typeDetector[i].checkMethod(val)) {
-                                    return typeDetector[i].type;
-                                }
-                            }
-                        },
-
-                        displayModelActions = {
-                            'baseName': function (path) {
-                                // Get The name
-                                var name = getNameFromPath(path);
-
-                                // ignore private variables
-                                if (name.indexOf('$$') === 0 || name.indexOf('__') === 0) {
-                                    return false;
-                                }
-                                return name;
+                            createElementWrapper = function (elType, className) {
+                                var wrapper = document.createElement(elType);
+                                wrapper.className = className;
+                                return wrapper;
                             },
-                            'setIndentClass': function (element, indent) {
-                                angular.element(element).addClass('indent' + indent);
-                            },
-                            'baseCreateElements': function (name, wrapper, doc, path, depth) {
-                                doc.appendChild(wrapper);
-                                var label = createLabelSpan(name);
-                                wrapper.appendChild(label);
-                                wrapper.pathName = path;
-                                displayModelActions.setIndentClass(wrapper, depth);
-                                displayModelActions.setIndentClass(label, depth);
-                            },
-                            'object': function (obj, doc, path, depth) {
-                                var name = displayModelActions.baseName(path);
-                                if (name === false) {
-                                    return;
-                                }
-                                var wrapper = createObjDivWrapper();
-                                displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
-                                var key;
-                                for (key in obj) {
-                                    if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent') {
-                                        ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
+                            createLabelSpan = function (text) {
+                                var label = createElementWrapper('span', 'angularpeeker label_wrapper');
+                                label.innerHTML = text;
+                                return label;
+                            },
+
+                            createObjDivWrapper = function () {
+                                return createElementWrapper('div', 'angularpeeker object_div_wrapper');
+                            },
+
+                            createArrayDivWrapper = function () {
+                                return createElementWrapper('div', 'angularpeeker array_div_wrapper');
+                            },
+
+                            createFunctionDivWrapper = function () {
+                                return createElementWrapper('div', 'angularpeeker function_div_wrapper');
+                            },
+
+                            createPrimitiveWrapper = function (path, type) {
+                                var inp = createElementWrapper('input', 'angularpeeker primitive_wrapper ' + type);
+                                angular.element(inp).attr('ng-model', path);
+                                return inp;
+                            },
+
+                            typeDetector = [
+                                {
+                                    type: 'string',
+                                    checkMethod: function (val) {
+                                        return angular.isString(val);
+                                    }
+                                },
+                                {
+                                    type: 'number',
+                                    checkMethod: function (val) {
+                                        return angular.isNumber(val);
+                                    }
+                                },
+                                {
+                                    type: 'boolean',
+                                    checkMethod: function (val) {
+                                        return (val === true || val === false);
+                                    }
+                                },
+                                {
+                                    type: 'array',
+                                    checkMethod: function (val) {
+                                        return angular.isArray(val);
+                                    }
+                                },
+                                {
+                                    type: 'function',
+                                    checkMethod: function (val) {
+                                        return angular.isFunction(val);
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    checkMethod: function (val) {
+                                        return angular.isObject(val);
+                                    }
+                                },
+                                {
+                                    type: 'null',
+                                    checkMethod: function (val) {
+                                        return val === null;
+                                    }
+                                }
+                            ],
+
+                            getType = function (val) {
+                                var i;
+                                for (i = 0; i < typeDetector.length; i += 1) {
+                                    if (typeDetector[i].checkMethod(val)) {
+                                        return typeDetector[i].type;
                                     }
                                 }
                             },
-                            'array': function (arr, doc, path, depth) {
-                                // Get The name
-                                var name = displayModelActions.baseName(path);
-                                if (name === false) {
-                                    return;
+
+                            displayModelActions = {
+                                'baseName': function (path) {
+                                    // Get The name
+                                    var name = getNameFromPath(path);
+
+                                    // ignore private variables
+                                    if (name.indexOf('$$') === 0 || name.indexOf('__') === 0) {
+                                        return false;
+                                    }
+                                    return name;
+                                },
+                                'setIndentClass': function (element, indent) {
+                                    angular.element(element).addClass('indent' + indent);
+                                },
+                                'setLabelHeaderClass': function (wrapper) {
+                                    var label = domActions.find('.label_wrapper', wrapper)[0];
+                                    domActions.addClass('header', label);
+                                },
+                                'baseCreateElements': function (name, wrapper, doc, path, depth) {
+                                    // Create outer skin
+                                    var outer = createElementWrapper('div', 'angularpeeker outerSkin');
+                                    outer.appendChild(wrapper);
+
+                                    doc.appendChild(outer);
+                                    var label = createLabelSpan(name);
+                                    wrapper.appendChild(label);
+                                    wrapper.pathName = path;
+                                    displayModelActions.setIndentClass(wrapper, depth);
+                                },
+                                'object': function (obj, doc, path, depth) {
+                                    var name, wrapper, key;
+
+                                    name = displayModelActions.baseName(path);
+                                    if (name === false) {
+                                        return;
+                                    }
+                                    wrapper = createObjDivWrapper();
+                                    displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+                                    displayModelActions.setLabelHeaderClass(wrapper);
+
+                                    for (key in obj) {
+                                        if (obj.hasOwnProperty(key) && key !== 'this' && key !== '$parent' && key !== '$root') {
+                                            ScopeViewBuilder.prototype.buildScopeView(obj[key], wrapper, path + '.' + key, depth);
+                                        }
+                                    }
+                                },
+                                'array': function (arr, doc, path, depth) {
+                                    // Get The name
+                                    var name = displayModelActions.baseName(path);
+                                    if (name === false) {
+                                        return;
+                                    }
+
+                                    var wrapper = createArrayDivWrapper();
+                                    displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+                                    displayModelActions.setLabelHeaderClass(wrapper);
+
+                                    arr.forEach(function (item, index) {
+                                        ScopeViewBuilder.prototype.buildScopeView(item, wrapper, path + '[' + index + ']', depth);
+                                    });
+
+                                },
+                                'function': function (func, doc, path, depth) {
+                                    // Get The name
+                                    var name = displayModelActions.baseName(path);
+                                    if (name === false) {
+                                        return;
+                                    }
+
+                                    var wrapper = createFunctionDivWrapper();
+                                    displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+                                    displayModelActions.setLabelHeaderClass(wrapper);
+
+                                    var thisWrapper = createElementWrapper('div', 'angularpeeker function_elements this_field');
+                                    // Add an input and an invoke button
+                                    var inpThisLabel = createLabelSpan('this');
+                                    thisWrapper.appendChild(inpThisLabel);
+                                    var inpThis = createElementWrapper('input', 'angularpeeker function_elements this_field for_' + name);
+                                    thisWrapper.appendChild(inpThis);
+                                    wrapper.appendChild(thisWrapper);
+
+                                    var paramsWrapper = createElementWrapper('div', 'angularpeeker function_elements params_field');
+                                    var inpParamsLabel = createLabelSpan('parameters');
+                                    paramsWrapper.appendChild(inpParamsLabel);
+                                    var inpParams = createElementWrapper('input', 'angularpeeker function_elements params_field for_' + name);
+                                    paramsWrapper.appendChild(inpParams);
+                                    wrapper.appendChild(paramsWrapper);
+
+                                    var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
+                                    invokeButton.innerHTML = 'Call';
+                                    angular.element(invokeButton).attr('ng-click', 'invokeMethod(\'' + name + '\')');
+                                    wrapper.appendChild(invokeButton);
+
+                                    var viewMethodButton = createElementWrapper('div', 'button view_function live_gradient_yellow');
+                                    viewMethodButton.innerHTML = 'View';
+                                    angular.element(viewMethodButton).attr('ng-click', 'viewMethod(\'' + name + '\')');
+                                    wrapper.appendChild(viewMethodButton);
+
+
+                                },
+                                'primitive': function (doc, path, type, depth) {
+                                    // Get The name
+                                    var name = displayModelActions.baseName(path);
+                                    if (name === false) {
+                                        return;
+                                    }
+
+                                    var wrapper = createElementWrapper('div', 'angularpeeker generic_wrapper');
+                                    displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
+                                    var inp = createPrimitiveWrapper(path, type);
+                                    wrapper.appendChild(inp);
+                                },
+                                'string': function (str, doc, path, depth) {
+                                    displayModelActions.primitive(doc, path, 'string', depth);
+                                },
+                                'number': function (str, doc, path, depth) {
+                                    displayModelActions.primitive(doc, path, 'number', depth);
+                                },
+                                'boolean': function (str, doc, path, depth) {
+                                    displayModelActions.primitive(doc, path, 'boolean', depth);
+                                },
+                                'null': function (str, doc, path, depth) {
+                                    displayModelActions.primitive(doc, path, 'null', depth);
                                 }
+                            };
 
-                                var wrapper = createArrayDivWrapper();
-                                displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
-
-                                arr.forEach(function (item, index) {
-                                    ScopeViewBuilder.prototype.buildScopeView(item, wrapper, path + '[' + index + ']', depth);
-                                });
-
-                            },
-                            'function': function (func, doc, path, depth) {
-                                // Get The name
-                                var name = displayModelActions.baseName(path);
-                                if (name === false) {
-                                    return;
-                                }
-
-                                var wrapper = createFunctionDivWrapper();
-                                displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
-                            },
-                            'primitive': function (doc, path, type, depth) {
-                                // Get The name
-                                var name = displayModelActions.baseName(path);
-                                if (name === false) {
-                                    return;
-                                }
-
-                                var wrapper = createElementWrapper('div', 'angularpeeker generic_wrapper');
-                                displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
-                                var inp = createPrimitiveWrapper(path, type);
-                                wrapper.appendChild(inp);
-                            },
-                            'string': function (str, doc, path, depth) {
-                                displayModelActions.primitive(doc, path, 'string', depth);
-                            },
-                            'number': function (str, doc, path, depth) {
-                                displayModelActions.primitive(doc, path, 'number', depth);
-                            },
-                            'boolean': function (str, doc, path, depth) {
-                                displayModelActions.primitive(doc, path, 'boolean', depth);
-                            },
-                            'null': function (str, doc, path, depth) {
-                                displayModelActions.primitive(doc, path, 'null', depth);
-                            }
+                        //===========================
+                        //      Private Constructor =
+                        //===========================
+                        var ScopeViewBuilder = function () {
                         };
 
-                    //===========================
-                    //      Private Constructor =
-                    //===========================
-                    var ScopeViewBuilder = function () {
-                    };
 
+                        ScopeViewBuilder.prototype.buildScopeView = function (model, doc, path, depth) {
+                            // Create doc if it wasn't passed
+                            doc = doc || createObjDivWrapper();
+                            // Set the depth
+                            depth = (depth !== undefined && depth !== null) ? depth : 0;
 
-                    ScopeViewBuilder.prototype.buildScopeView = function (model, doc, path, depth) {
-                        // Create doc if it wasn't passed
-                        doc = (doc) ? doc : createObjDivWrapper();
-                        // Set the depth
-                        depth = (depth !== undefined && depth !== null) ? depth : 0;
+                            // Set a compile on depth 0
+                            var toCompile = (depth === 0);
 
-                        // Set a compile on depth 0
-                        var toCompile = (depth === 0);
+                            // Check if depth not exceeded
+                            if (depth < config.queryDepth) {
+                                depth += 1;
+                            } else {
+                                return;
+                            }
 
-                        // Check if depth not exceeded
-                        if (depth < config.queryDepth) {
-                            depth += 1;
-                        } else {
-                            return;
-                        }
+                            // Get the type
+                            var modelType = getType(model);
+                            if (modelType) {
+                                displayModelActions[modelType](model, doc, path, depth);
+                            }
 
-                        // Get the type
-                        var modelType = getType(model);
-                        if (modelType) {
-                            displayModelActions[modelType](model, doc, path, depth);
-                        }
+                            if (toCompile) {
+                                return $compile(doc);
+                            }
 
-                        if (toCompile) {
-                            return $compile(doc);
-                        }
+                        };
 
-                    };
-
-                    return new ScopeViewBuilder();
-                }
-            ];
-        });
+                        return new ScopeViewBuilder();
+                    }
+                ];
+            }]);
 }());
 // Source: app/scripts/templateCache.js
 angular.module('angularPeeker')
@@ -925,6 +1084,12 @@ angular.module('angularPeeker')
                 '</div>' +
                 '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
+
+            var methodViewerHtml = '<div class="angularpeeker method_viewer">' +
+                '<div class="method_content"></div> ' +
+                '<div class="button" ng-click="remove()">Close</div>' +
+                '</div>';
+            $templateCache.put('method-viewer.html', methodViewerHtml);
         }
     ]);
 

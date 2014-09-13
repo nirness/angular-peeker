@@ -36,7 +36,6 @@
 .angular_peeker_container {
     display: inline-block;
     position: fixed;
-    width: 80%;
     left: 10%;
     top: 10%;
     bottom: 10%;
@@ -54,29 +53,60 @@ span.angularpeeker.label_wrapper {
     overflow: hidden;
     text-overflow: ellipsis;
     display: inline-block;
+    padding: 2px 8px;
+    transform: translateY(4px);
 }
 
-.angularpeeker.object_div_wrapper {
+span.angularpeeker.label_wrapper.header {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 110%;
+    text-shadow: 1px 1px 5px rgba(0, 194, 255, 0.44);
+    width: 295px;
+}
+
+div.angularpeeker.outerSkin {
+    display: block;
+}
+
+div.angularpeeker.object_div_wrapper {
     display: inline-block;
     background-color: rgba(186, 218, 189, 1);
-    padding: 10px 5px 5px 1px;
-    margin: 10px;
+    padding: 10px 0 5px 0;
     border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 10px;
+    margin-bottom: 5px;
 }
 
-.angularpeeker.array_div_wrapper {
+div.angularpeeker.array_div_wrapper {
     background-color: rgba(224, 220, 166, 1);
     border: 1px solid rgba(24, 5, 100, 0.16);
     display: inline-block;
     padding-top: 10px;
     border-radius: 10px;
+    margin-bottom: 5px;
 }
 
-.angularpeeker.generic_wrapper {
+div.angularpeeker.function_div_wrapper {
+    background-color: #C49BEB;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+div.angularpeeker.function_div_wrapper .button {
+    margin-left: 10px;
+}
+
+div.angularpeeker.generic_wrapper {
     border: 1px solid rgba(0, 0, 0, 0.2);
     background-color: ghostwhite;
     border-radius: 6px;
+    margin-bottom: 5px;
+    display: inline-block;
+    width: 323px;
 }
 
 input.string.angularpeeker {
@@ -154,6 +184,23 @@ input.boolean.angularpeeker {
 
 }
 
+.angularpeeker.method_viewer {
+    position: fixed;
+    background: #353535;
+    width: 70%;
+    left: 10%;
+    height: 50%;
+    color: rgb(249, 255, 105);
+    padding: 5%;
+    overflow: auto;
+}
+
+.angularpeeker.method_viewer .button {
+    position: absolute;
+    bottom: 20px;
+}
+
+
 /********************
      Gradients
 *********************/
@@ -191,4 +238,6 @@ input.boolean.angularpeeker {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#dcdcdc', endColorstr='#d2d2d2', GradientType=0); /* IE6-9 */
     color: #7c7c7c;
 }
+
+
 

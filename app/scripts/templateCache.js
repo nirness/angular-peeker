@@ -28,5 +28,11 @@ angular.module('angularPeeker')
                 '</div>' +
                 '</div>';
             $templateCache.put('peeker-strip.html', peekerStrip);
+
+            var methodViewerHtml = '<div class="angularpeeker method_viewer">' +
+                '<div class="method_content"></div> ' +
+                '<div class="button" ng-click="remove()">Close</div>' +
+                '</div>';
+            $templateCache.put('method-viewer.html', methodViewerHtml);
         }
     ]);
