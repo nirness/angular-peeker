@@ -177,9 +177,20 @@
                                 var wrapper = createFunctionDivWrapper();
                                 displayModelActions.baseCreateElements(name, wrapper, doc, path, depth);
 
+                                var thisWrapper = createElementWrapper('div', 'angularpeeker function_elements this_field');
                                 // Add an input and an invoke button
-                                var inp = createElementWrapper('input', 'angularpeeker function_elements for_' + name);
-                                wrapper.appendChild(inp);
+                                var inpThisLabel = createLabelSpan('this');
+                                thisWrapper.appendChild(inpThisLabel);
+                                var inpThis = createElementWrapper('input', 'angularpeeker function_elements this_field for_' + name);
+                                thisWrapper.appendChild(inpThis);
+                                wrapper.appendChild(thisWrapper);
+
+                                var paramsWrapper = createElementWrapper('div', 'angularpeeker function_elements params_field');
+                                var inpParamsLabel = createLabelSpan('parameters');
+                                paramsWrapper.appendChild(inpParamsLabel);
+                                var inpParams = createElementWrapper('input', 'angularpeeker function_elements params_field for_' + name);
+                                paramsWrapper.appendChild(inpParams);
+                                wrapper.appendChild(paramsWrapper);
 
                                 var invokeButton = createElementWrapper('div', 'button call_function live_gradient_yellow');
                                 invokeButton.innerHTML = 'Call';
