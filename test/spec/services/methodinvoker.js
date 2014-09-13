@@ -29,6 +29,38 @@
             spyOn(scope, 'someMethod');
         });
 
+        describe('test split', function () {
+
+            it('should return 4 members when called with ignoreInJson=false using [1,2,3,4] as string',
+                function () {
+                    var arr = methodInvoker.split('[1,2,3,4]', ',', false);
+                    expect(arr.length).toBe(4);
+                });
+
+            it('should return one member when called with [1,2,3,4]', function () {
+                var arr = methodInvoker.split('[1,2,3,4]');
+                expect(arr.length).toBe(1);
+            });
+
+            it('should return one member that equals [1,2,3,4] when called with [1,2,3,4]', function () {
+                var arr = methodInvoker.split('[1,2,3,4]');
+                expect(arr[0]).toBe('[1,2,3,4]');
+            });
+
+            it('should return three member when called with [1,2,3,4], "tree", {a:1,b:2}', function () {
+                var arr = methodInvoker.split('[1,2,3,4], "tree", {a:1,b:2}');
+                expect(arr.length).toBe(3);
+            });
+
+            it('should equal [1,2,3,4] and "tree" and {a:1,b:2} when called with [1,2,3,4], "tree", {a:1,b:2}', function () {
+                var arr = methodInvoker.split('[1,2,3,4], "tree", {a:1,b:2}');
+                expect(arr[0]).toBe('[1,2,3,4]');
+                expect(arr[1]).toBe('"tree"');
+                expect(arr[2]).toBe('{a:1,b:2}');
+            });
+
+        });
+
         describe('test getTypedParam', function () {
             it('should return null when invoked with undefined, null or empty string',
                 function () {
